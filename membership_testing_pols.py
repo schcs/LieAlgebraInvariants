@@ -6,6 +6,7 @@ def alg_dependence( gens ):
     # mudança do Csaba 2
     
     P = gens[0].parent()
+    # mudança do Igor
     P_gens = P.gens()
     nr_gens = len(gens)
     n = len(P.gens())
