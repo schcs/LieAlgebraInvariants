@@ -15,18 +15,20 @@ def differential_operator( L, x ):
     
     if hasattr( L, "polynomialRing" ):
         P = L.polynomialRing
+        F = L.fractionField
     else: 
-        d = L.dimension()
         P = PolynomialRing( F, d, 'x' )
+        F = P.fraction_field()
         L.polynomialRing = P
+        L.fractionField = F
 
-    D = P.derivation_module()
+    D = F.derivation_module()
     op = D.zero()
     bas = L.basis().list()
 
     for i in range( d ):
         coeffs = L.bracket( x, bas[i] ).dense_coefficient_list()
-        d_coeff = sum( coeffs[i]*P.gens()[i] for i in range( d ))
+        d_coeff = sum( coeffs[i]*F.gens()[i] for i in range( d ))
         op += d_coeff*D.gens()[i]
 
     return op
