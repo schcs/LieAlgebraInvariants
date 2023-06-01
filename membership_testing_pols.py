@@ -1,5 +1,6 @@
 # mudança
 # 
+# mudança 2
 def alg_dependence( gens ):
 
     P = gens[0].parent()
