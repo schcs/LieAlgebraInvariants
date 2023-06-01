@@ -2,7 +2,9 @@
 # 
 # mudança 2
 def alg_dependence( gens ):
-
+   
+    # mudança do Igor
+    
     P = gens[0].parent()
     P_gens = P.gens()
     nr_gens = len(gens)
