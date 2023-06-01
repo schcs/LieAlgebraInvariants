@@ -20,6 +20,9 @@ def algLieGAPparaSAGE(l):
     return L
 #-------------
 
+def nilpotent_lie_algebra( F, args ):
+    return algLieGAPparaSAGE( gap.NilpotentLieAlgebra( F, args ))
+
 #------------- FUNÇÃO satisIdentJacobi 
 def satisIdentJacobi(L):
     bL = list(L.basis())
