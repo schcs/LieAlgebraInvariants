@@ -57,15 +57,16 @@ def differential_operator( L, x ):
 
 # Vamos escrever
 
-# [x,xi] = gamma_{i}^{1}x1 + ... + gamma_{i}^{i-1}xi-1
+# [x,xi] = gamma_{1i}x_{1} + ... + gamma_{i-1,i}x_{i-1}
 
 # Defina a matrix Sigma como sendo
 
-# 0 0 0 0 ... 0 0
-# gamma_{21} 0 0 0 ... 0 0
-# gamma_{31} gamma_{32} 0 0 ... 0 0
-# . . . . . .
-# gamma_{n1} gamma_{n2} gamma_{n3} gamma_{n4} ... gamma_{n,n-1} 0
+# 0 gamma_{12} . . . gamma_{1n} 
+# 0 0 . . .          gamma_{2n}
+# 0 0 . . .          gamma_{3n}
+# . . . . . 
+# 0 0 . . .          gamma_{n-1,n}
+# 0 0 . . .          0
 
 # A função abaixo tem como entrada a matrix Sigma e tem como saída um homomorfismo dos invariantes da derivação de x.
 #-------------
@@ -73,20 +74,39 @@ def invar(Sigma):
     '''
         INPUT:
         
-            - 
+            - a matrix that represents a linear transformation
             
         OUTPUT:
             
-            - 
+            - a homomorphism between fraction fields of polynomial rings, whose image consists of invariants of the extended derivation operator of the linear transformation
         
         COMMENT:
         
-
+            Given a linear transformation T between a vector space with basis {x_{1}, ..., x_{n}}, we can extend it, by linearity and the Leibniz rule, to be a derivation of the fraction field of the ring F[x_{1}, ..., x_{n}]. Considering the matrix of T with respect to a fixed basis, this function calculates a homomorphism whose image consists of invariants of the derivation operator.
         
         EXAMPLES:
         
+            sage: L = nilpotent_lie_algebra(QQ, [6,16], True)
+
+            sage: x = L.random_element()
             
-        
+            sage: x
+            
+            13*x4
+            
+            sage: Sigma = adjoint_matrix_element(L,x)
+
+            sage: invar(Sigma)
+            
+            Ring morphism:
+            From: Fraction Field of Multivariate Polynomial Ring in y0, y1, y2, y3, y4 over Rational Field
+            To:   Fraction Field of Multivariate Polynomial Ring in x0, x1, x2, x3, x4, x5 over Rational Field
+            Defn: y0 |--> x0
+                    y1 |--> x1
+                    y2 |--> (-x2^2 + 2*x1*x3)/(2*x1)
+                    y3 |--> x4
+                    y4 |--> (x2^3 - 3*x1*x2*x3 + 3*x1^2*x5)/(3*x1^2)
+
     '''
     n = Sigma.nrows() # dimensão de L
     R = PolynomialRing(QQ, n, "x") # anel de polinômios em n variáveis
@@ -100,28 +120,30 @@ def invar(Sigma):
     FracR = FractionField(R) # corpo de frações de R
     FracS = FractionField(S) # corpo de frações de S
     logaux = True # variável lógica auxiliar
-    vLinNZero = 0 # linha na qual aparece o primeiro elemento não nulo de Sigma
-    # determinar quem é vLinNZero
+    vColNZero = 0 # coluna na qual aparece o primeiro elemento não nulo de Sigma
+    # determinar quem é vColNZero
     while logaux:
-        vLinNZero = vLinNZero + 1
-        for i in range(vLinNZero):
-            if Sigma[vLinNZero][i] != 0:
+        vColNZero = vColNZero + 1
+        for i in range(vColNZero):
+            if Sigma[i,vColNZero] != 0:
                 logaux = False
-                i = vLinNZero
+                i = vColNZero
     qDen = 0
-    for i in range(vLinNZero):
-        qDen = qDen + Sigma[vLinNZero][i]*x[i]
-    q = x[vLinNZero]/qDen
+    for i in range(vColNZero):
+        qDen = qDen + Sigma[i,vColNZero]*x[i]
+    q = x[vColNZero]/qDen
     M = -q*Sigma
     E = M.exp() # exponencial da matrix M 
-    H = (E*X).list() # lista da multiplicação de E com X
+    idM = matrix.identity(n)
     HR = [0]*(n - 1) # lista de zeros de tamanho n - 1
-    # preenchendo HR com os valores de H. Note que HR é o H, sem o valor da posição vLinNZero
+    # preenchendo HR com os valores de H. Note que HR é o H, sem o valor da posição vColNZero
     for i in range(n - 1):
-        if i < vLinNZero:
-            HR[i] = H[i]
+        if i < vColNZero:
+            for j in range(n):
+                HR[i] = HR[i] + (E*idM[:,i])[j]*X[j]
         else:
-            HR[i] = H[i + 1]
+            for j in range(n):
+                HR[i] = HR[i] + (E*idM[:,i+1])[j]*X[j]
     HomFracSR = Hom(FracS, FracR) # conjunto dos homomorfismo de FracS para FracR
     psi = HomFracSR(HR) # homomorfismo desejado
     return psi

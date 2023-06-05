@@ -378,7 +378,7 @@ def structure_constants(L, bLdada):
     for j in range(dimL):
         for i in range(dimL):
             for k in range(dimL):
-                M[i,j] = M[i,j] + coord_base(L, bL, L.bracket(bL[i],bL[j]))[k]*x[k]
+                M[i,j] = M[i,j] + coord_base(L, bL, L.bracket(bL[j],bL[i]))[k]*x[k]
     P = matrix(QQ, dimL)
     for i in range(dimL):
         P[:,i] = vector(coord_base(L, bL, bLdada[i]))
@@ -428,8 +428,8 @@ def adjoint_matrix_element(L, x):
     dimL = len(bEspL)
     M = matrix(QQ, dimL)
     colchXbase = [0]*dimL
-    for i in range(dimL):
-        colchXbase[i] = L.bracket(x,bEspL[i])
+    for j in range(dimL):
+        colchXbase[j] = L.bracket(x,bEspL[j])
     for j in range(dimL):
         for i in range(dimL):
             M[i, j] = coord_base(L, bEspL, colchXbase[j])[i]
