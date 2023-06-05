@@ -169,17 +169,3 @@ def consEst(L, bLdada):
     E = Pinv*M*P
     return E
 #-------------
-
-#------------- FUNÇÃO matrizDer -------------
-def matrizDer(x, L):
-    bLesp = baseEspAlgNil(L)
-    dimL = len(bLesp)
-    M = matrix(QQ, dimL)
-    colchXbase = [0]*dimL
-    for i in range(dimL):
-        colchXbase[i] = L.bracket(x,bLesp[i])
-    for i in range(dimL):
-        for j in range(dimL):
-            M[i, j] = coordBase(colchXbase[i], L, bLesp)[j]
-    return M    
-#-------------
