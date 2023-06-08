@@ -2,19 +2,7 @@ def rational_functions_to_pols( gens ):
     
     primes_of_denoms = []
     exponents_of_primes_in_denoms = []
-
-    for g in gens:
-        exps = []
-        d = g.denominator()
-        for f in d.factor():
-            #print( f )
-            if f[0] in primes_of_denoms:
-                ind = primes_of_denoms.index( f[0] )
-                exps.append( (ind, f[1]) )
-            else:
-                primes_of_denoms.append( f[0])
-                exps.append( (len(primes_of_denoms)-1, f[1] ))
-        exponents_of_primes_in_denoms.append( exps )    
+    units = []
     
     # get the parent pol ring
     P = gens[0].numerator().parent()
@@ -25,6 +13,23 @@ def rational_functions_to_pols( gens ):
     if not F.is_field():
         F = F.fraction_field()
 
+
+    for g in gens:
+        exps = []
+        d = g.denominator()
+        fact = d.factor()
+        units.append( F( fact.unit()))
+
+        for f in fact:
+            if f[0] in primes_of_denoms:
+                ind = primes_of_denoms.index( f[0] )
+                exps.append( (ind, f[1]) )
+            else:
+                primes_of_denoms.append( f[0])
+                exps.append( (len(primes_of_denoms)-1, f[1] ))
+        exponents_of_primes_in_denoms.append( exps )    
+    
+    
     P1 = PolynomialRing( F, n + len( primes_of_denoms), 'xx' )
     
     new_gens = []
@@ -34,7 +39,7 @@ def rational_functions_to_pols( gens ):
         g = gens[i]
         g1 = P(g.numerator()).subs( subs )
         #print( exps )
-        g1 *= prod( [ (P1.gens()[n+ex[0]])**ex[1] for ex in exponents_of_primes_in_denoms[i] ])
+        g1 *= (units[i]**-1)*prod( [ (P1.gens()[n+ex[0]])**ex[1] for ex in exponents_of_primes_in_denoms[i] ])
         new_gens.append( g1 )
 
     #print( primes_of_denoms )
@@ -158,13 +163,17 @@ def is_element_of_subalgebra( gens, p ):
     if len( deps ) == 0:
         return false, []
 
-    coeffs = [ x.coefficient( R.gens()[d] ) for x in deps ]
-    deps = [ -(coeffs[k]**-1)*deps[k].subs( r_subs ) for k in range( len( deps )) ]
     #return deps
-    #return deps, coeffs
+    deps = [ d.subs( r_subs ) for d in deps ]
+    
+    coeffs = [ x.coefficient( R.gens()[d] ) for x in deps ]
+    deps = [ -(coeffs[k]**-1)*deps[k] for k in range( len( deps )) ]
+    
+    #print( deps )
 
     expressions = [ deps[i] + (R.gens()[d]) for i in range( len( deps )) ]
     #return expressions
+    
 
     t_subs = { R.gens()[i]: gens[i] for i in range( len( gens )) }
     #return expressions, t_subs 
