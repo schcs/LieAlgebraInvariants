@@ -11,11 +11,11 @@ def differential_operator( L, x ):
     '''
     
     F = L.base_ring()
+    d = L.dimension()
     
     if hasattr( L, "polynomialRing" ):
         P = L.polynomialRing
     else: 
-        d = L.dimension()
         P = PolynomialRing( F, d, 'x' )
         L.polynomialRing = P
 
@@ -29,6 +29,20 @@ def differential_operator( L, x ):
         op += d_coeff*D.gens()[i]
 
     return op
+
+def matrix_of_diff_operator( d ):
+
+    coeff_list = d.list()
+    d = len( coeff_list )
+    m = zero_matrix( d, d )
+    P = coeff_list[0].parent()
+    gensP = P.gens()
+
+    for i in range(d):
+        for j in range(d):
+            m[i,j] = coeff_list[i].monomial_coefficient( gensP[j] )
+    
+    return m
 
 
 # Seja L uma álgebra de Lie nilpotente com base {x1, ..., xn} tal que, para todo x em L, [x, xi] é combinação linear de x1 até xi-1. Considere a derivação
@@ -65,6 +79,7 @@ def invar(Sigma):
     logaux = True # variável lógica auxiliar
     vLinNZero = 0 # linha na qual aparece o primeiro elemento não nulo de Sigma
     # determinar quem é vLinNZero
+
     while logaux:
         vLinNZero = vLinNZero + 1
         for i in range(vLinNZero):

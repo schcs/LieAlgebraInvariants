@@ -1,3 +1,51 @@
+def rational_functions_to_pols( gens ):    
+    
+    primes_of_denoms = []
+    exponents_of_primes_in_denoms = []
+
+    for g in gens:
+        exps = []
+        d = g.denominator()
+        for f in d.factor():
+            #print( f )
+            if f[0] in primes_of_denoms:
+                ind = primes_of_denoms.index( f[0] )
+                exps.append( (ind, f[1]) )
+            else:
+                primes_of_denoms.append( f[0])
+                exps.append( (len(primes_of_denoms)-1, f[1] ))
+        exponents_of_primes_in_denoms.append( exps )    
+    
+    # get the parent pol ring
+    P = gens[0].numerator().parent()
+    P_gens = P.gens()
+    nr_gens = len(gens)
+    n = len(P.gens())
+    F = P.base_ring()
+    if not F.is_field():
+        F = F.fraction_field()
+
+    P1 = PolynomialRing( F, n + len( primes_of_denoms), 'xx' )
+    
+    new_gens = []
+    subs = { P.gens()[k]: P1.gens()[k] for k in range( n )}
+    #return subs
+    for i in range( len( gens )):
+        g = gens[i]
+        g1 = P(g.numerator()).subs( subs )
+        #print( exps )
+        g1 *= prod( [ (P1.gens()[n+ex[0]])**ex[1] for ex in exponents_of_primes_in_denoms[i] ])
+        new_gens.append( g1 )
+
+    #print( primes_of_denoms )
+    #return primes_of_denoms, subs
+    for i in range( len( primes_of_denoms )):
+        p = P(primes_of_denoms[i])
+        pp = p.subs( subs )
+        new_gens.append( pp*P1.gens()[n+i]-1 )
+
+    return new_gens  
+
 #-------------
 def alg_dependence( gens ):
     r''' 
@@ -28,13 +76,12 @@ def alg_dependence( gens ):
         0
         
     '''
-    
-    # get the parent pol ring
     P = gens[0].parent()
     P_gens = P.gens()
     nr_gens = len(gens)
     n = len(P.gens())
     F = P.base_ring()
+
     R = PolynomialRing( F, n+nr_gens, 'z' )
     rgens = R.gens()
 
@@ -92,16 +139,37 @@ def is_element_of_subalgebra( gens, p ):
 
             True
     '''
-    
-    deps = alg_dependence( gens+[p] )
+    gens_new = rational_functions_to_pols( gens + [p] )
+    nr_fake_gens = len( gens_new ) - len( gens )
+    #print( "new_gens are ", gens_new )
+    #return gens_new
+    deps = alg_dependence( gens_new )
+    #return deps 
     d = len( gens )
     
     if len( deps ) == 0:
         return false, _
     
     R = deps[0].parent()
+    R_gens = [ x for x in R.gens()[0:len(gens)+1]]
+    R_gens += [ 0 for _ in range( nr_fake_gens-1 )]
+    r_subs = { R.gens()[i]: R_gens[i] for i in range( len( R.gens()))}
     deps = [ x for x in deps if R.gens()[d] in x.monomials() ]
+    if len( deps ) == 0:
+        return false, []
+
     coeffs = [ x.coefficient( R.gens()[d] ) for x in deps ]
-    
-    return len( deps ) > 0, [ deps[i] - coeffs[i]*R.gens()[d] for i in range( len( deps )) ] 
+    deps = [ -(coeffs[k]**-1)*deps[k].subs( r_subs ) for k in range( len( deps )) ]
+    #return deps
+    #return deps, coeffs
+
+    expressions = [ deps[i] + (R.gens()[d]) for i in range( len( deps )) ]
+    #return expressions
+
+    t_subs = { R.gens()[i]: gens[i] for i in range( len( gens )) }
+    #return expressions, t_subs 
+
+    assert { e.subs( t_subs ) == p for e in expressions } == { true }
+
+    return true, expressions 
 #-------------
