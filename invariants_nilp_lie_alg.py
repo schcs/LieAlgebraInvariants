@@ -208,3 +208,41 @@ def invar_nilp_matrix(Sigma):
     psi = HomFracSR(HR) 
     return psi
 #-------------
+
+#-------------
+def invar_nilp_lie_alg(F, args):
+    L = nilpotent_lie_algebra(F, args, True)
+    dimL = len(L.basis())
+    P = PolynomialRing( F, dimL, 'x' )
+    F = P.fraction_field()
+    L.polynomialRing = P
+    L.fractionField = F
+    x = L.polynomialRing.gens()
+    first_not_center = 0
+    while L.gens()[first_not_center] in L.center():
+        first_not_center = first_not_center + 1
+    Sigma = adjoint_matrix_element(L, L.gens()[first_not_center])
+    phi = invar_nilp_matrix_jordan(Sigma)
+    gens_domain_phi = phi.domain().gens()
+    gens_codomain_phi = phi.codomain().gens()
+    for i in range(first_not_center + 1, dimL):
+        d = differential_operator(L,L.gens()[i])
+        list_pols = [0]*(len(gens_domain_phi))
+        for j in range(len(gens_domain_phi)):
+            list_pols[j] = phi(gens_domain_phi[j]).subs({gens_codomain_phi[k] == x[k] for k in range(len(gens_codomain_phi))})
+        Sigma = matrix(QQ, len(gens_domain_phi))
+        for j in range(len(gens_domain_phi)):
+            pol = is_element_of_subalgebra(list_pols,d(list_pols[j]))[1][0]
+            if pol.degree() > 1:
+                return("Problema com a combinação linear de polinômios")
+            for k in range(len(gens_domain_phi)):
+                Sigma[k,j] =  pol.coefficient(pol.parent().gens()[k])
+        if Sigma != 0:
+            x = [0]*(len(list_pols))
+            for j in range(len(list_pols)):
+                x[j] = list_pols[j]
+            phi = invar_nilp_matrix_jordan(Sigma)
+            gens_domain_phi = phi.domain().gens()
+            gens_codomain_phi = phi.codomain().gens()
+    return phi
+#-------------
