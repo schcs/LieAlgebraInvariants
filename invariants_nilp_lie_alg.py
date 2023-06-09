@@ -210,11 +210,12 @@ def invar_nilp_matrix(Sigma):
 #-------------
 
 #-------------
-def invar_nilp_lie_alg(F, args):
-    L = nilpotent_lie_algebra(F, args, True)
+def invar_nilp_lie_alg( L ):
+    #L = nilpotent_lie_algebra(F, args, True)
     dimL = len(L.basis())
+    F = L.base_ring()
     P = PolynomialRing( F, dimL, 'x' )
-    F = P.fraction_field()
+    #F = P.fraction_field()
     L.polynomialRing = P
     L.fractionField = F
     x = L.polynomialRing.gens()
