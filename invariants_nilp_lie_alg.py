@@ -261,9 +261,15 @@ def invar_nilp_lie_alg(L):
             list_pols[j] = phi(gens_domain_phi[j]).subs({gens_codomain_phi[k] : x[k] for k in range(len(gens_codomain_phi))})
         Sigma = matrix(QQ, len(gens_domain_phi))
         for j in range(len(gens_domain_phi)):
+            if is_element_of_subalgebra(list_pols,d(list_pols[j]))[0] == False:
+                print("Etapa", end=": ")
+                print(i)
+                return print("Problema com a combinação linear de polinômios (pertencimento)")
             pol = is_element_of_subalgebra(list_pols,d(list_pols[j]))[1][0]
             if pol.degree() > 1:
-                return print("Problema com a combinação linear de polinômios")
+                print("Etapa", end=": ")
+                print(i)
+                return print("Problema com a combinação linear de polinômios (grau)")
             for k in range(len(gens_domain_phi)):
                 Sigma[k,j] =  pol.coefficient(pol.parent().gens()[k])
         if Sigma != 0:
