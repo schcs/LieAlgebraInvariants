@@ -283,3 +283,60 @@ def invar_nilp_lie_alg(L):
     phi = HomFracSR(HR)
     return phi
 #-------------
+
+#-------------
+def invar_test_nilp_lie_alg(L, phi):
+    r'''
+        INPUT:
+        
+            - 
+            
+        OUTPUT:
+            
+            - 
+
+        COMMENT:
+
+
+            
+        EXAMPLES:
+        
+            
+
+    '''
+    bL = L.basis().list()
+    M = structure_constants(L, bL)
+    rank_M = M.rank()
+    dimL = len(bL)
+    print("")
+    print("A dimensão da álgebra de Lie L é ", dimL, ".", sep="")
+    print("O posto da matriz das constantes estruturas de L é ", rank_M, ".", sep="")
+    print("Assim, o número de invariantes algebricamente independentes (?) é", end=": ")
+    print(dimL, " - ", rank_M ," = ", dimL - rank_M, ".", sep="")
+    gens_domain_phi = phi.domain().gens()
+    print("Tais invariantes são:")
+    for i in range(len(gens_domain_phi)):
+        print(phi(gens_domain_phi[i]))
+    print("")
+    dimL = len(bL)
+    d = [0]*dimL
+    print("As derivações são", end=": \n")
+    for i in range(dimL):
+        d[i] = differential_operator(L, bL[i])
+        print("d", i, " = ", d[i], sep="")
+    print("")
+    table = [[]]*(dimL + 1)
+    table[0] = [" "]
+    for i in range(1, dimL + 1):
+        table[i] = ["d"+str(i-1)]
+    for i in range(len(gens_domain_phi)):
+        table[0] = table[0] + [phi(gens_domain_phi[i])]
+    for i in range(len(gens_domain_phi)):
+        for j in range(1, dimL + 1):
+            table[j] = table[j] + [d[j-1](phi(gens_domain_phi[i]))]
+    print("Os valores das derivações aplicadas nos invariantes são apresentados na seguinte tabela:")
+    for i in range(dimL + 1):
+        for j in range(len(gens_domain_phi) + 1):
+            print(table[i][j], end="\t ")
+        print("")
+#-------------
