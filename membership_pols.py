@@ -6,6 +6,7 @@ def rational_functions_to_pols( gens ):
     
     # get the parent pol ring
     P = gens[0].numerator().parent()
+    P = P.change_ring(P.base_ring().fraction_field())
     P_gens = P.gens()
     nr_gens = len(gens)
     n = len(P.gens())
@@ -37,6 +38,7 @@ def rational_functions_to_pols( gens ):
     #return subs
     for i in range( len( gens )):
         g = gens[i]
+        #print( g.numerator(), P )
         g1 = P(g.numerator()).subs( subs )
         #print( exps )
         g1 *= (units[i]**-1)*prod( [ (P1.gens()[n+ex[0]])**ex[1] for ex in exponents_of_primes_in_denoms[i] ])
