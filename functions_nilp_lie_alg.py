@@ -435,3 +435,54 @@ def adjoint_matrix_element(L, x):
             M[i, j] = coord_base(L, bEspL, colchXbase[j])[i]
     return M    
 #-------------
+
+#-------------
+def get_keys_from_value(d, val):
+    return [k for k, v in d.items() if v == val]
+#-------------
+
+#-------------
+def lie_algebra_strict_upper_triangular_matrices(n):
+    dimL = (n*(n-1)/2).numerator()
+    basis_matrices = [[]]*n
+    for i in range(n):
+        for j in range(n):
+            if j <= i:
+                basis_matrices[i] = basis_matrices[i] + [0]
+            else:
+                elem_matrix = matrix(QQ, n)
+                elem_matrix[i,j] = 1
+                basis_matrices[i] = basis_matrices[i] + [elem_matrix]
+    basis_lie_alg = [[]]*n
+    for i in range(n):
+        for j in range(n):
+            if j <= i:
+                basis_lie_alg[i] = basis_lie_alg[i] + [0]
+            else:
+                basis_lie_alg[i] = basis_lie_alg[i] + ["x" + str(i) + str(j)]           
+    dict_matr_lie = {}
+    for i in range(n):
+        for j in range(n):
+            dict_matr_lie[basis_lie_alg[i][j]] = basis_matrices[i][j]
+    keys = [0]*dimL
+    aux_number = 0
+    for i in range(n):
+        for j in range(n):
+            if basis_lie_alg[i][j] != 0:
+                keys[aux_number] = basis_lie_alg[i][j]
+                aux_number = aux_number + 1
+    value = [0]*dimL
+    aux_number = 0
+    for i in range(n):
+        for j in range(n):
+            if basis_matrices[i][j] != 0:
+                value[aux_number] = basis_matrices[i][j]
+                aux_number = aux_number + 1
+    dict_lie = {}
+    for i in range(dimL):
+        for j in range(i,dimL):
+            if get_keys_from_value(dict_matr_lie,value[i]*value[j] - value[j]*value[i])[0] != 0:
+                dict_lie[(keys[i], keys[j])] = {get_keys_from_value(dict_matr_lie,value[i]*value[j] - value[j]*value[i])[0]:1}
+    L = LieAlgebra(QQ, dict_lie, names = keys)
+    return L
+#-------------
