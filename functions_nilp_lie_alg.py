@@ -483,6 +483,7 @@ def lie_algebra_strict_upper_triangular_matrices(n):
         for j in range(i,dimL):
             if get_keys_from_value(dict_matr_lie,value[i]*value[j] - value[j]*value[i])[0] != 0:
                 dict_lie[(keys[i], keys[j])] = {get_keys_from_value(dict_matr_lie,value[i]*value[j] - value[j]*value[i])[0]:1}
+    #return dict_lie
     L = LieAlgebra(QQ, dict_lie, names = keys)
     return L
 #-------------

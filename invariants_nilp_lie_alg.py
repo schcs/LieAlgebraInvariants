@@ -28,24 +28,24 @@ def differential_operator( L, x ):
     
     F = L.base_ring()
     d = L.dimension()
+    bas = L.basis()
     
     if hasattr( L, "polynomialRing" ):
         P = L.polynomialRing
         F = L.fractionField
     else: 
-        P = PolynomialRing( F, d, 'x' )
+        P = PolynomialRing( F, d, bas.keys().list())
         F = P.fraction_field()
         L.polynomialRing = P
         L.fractionField = F
 
     D = F.derivation_module()
     op = D.zero()
-    bas = L.basis().list()
 
-    for i in range( d ):
-        coeffs = L.bracket( x, bas[i] ).dense_coefficient_list()
-        d_coeff = sum( coeffs[i]*F.gens()[i] for i in range( d ))
-        op += d_coeff*D.gens()[i]
+    for k in bas.keys().list():
+        mc = L.bracket( x, bas[k] ).monomial_coefficients()
+        d_coeff = sum( [mc[k]*F(k) for k in mc], P(0))
+        op += d_coeff*D.gens_dict()['d/d'+k]
 
     return op
 #-------------
@@ -464,9 +464,11 @@ def invar_nilp_lie_alg_via_method_characteristics_simple(L):
         return False
     for i in range(first_not_center + 1, dimL):
         d = differential_operator(Lesp, bEspLesp[i])
+        #phi0 = phi
         phi = method_characteristics_simple(d, phi)
+        #print( "succeed", d )
         if phi == False:
-            return False
+            return False#, phi0, d
     FracS = phi.domain()
     gens_domain_phi = phi.domain().gens()
     gens_codomain_phi = phi.codomain().gens()
