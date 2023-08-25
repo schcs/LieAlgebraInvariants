@@ -296,6 +296,38 @@ def nilpotent_lie_algebra( F, args, standard_basis = False ):
 #-------------
 
 #-------------
+def solvable_lie_algebra( F, args, standard_basis = False ):
+    '''
+        INPUT:
+        
+            - a field, F
+            - a list with arguments, args
+            - an optional Boolean value
+            
+        OUTPUT:
+            
+            - a solvable Lie algebra 
+        
+        COMMENT:
+        
+            This function uses the gap.SolvableLieAlgebra function to return a solvable Lie algebra in Gap. After that, it uses the lie_alg_from_gap_to_sage function to convert that algebra, written in the Gap language, to an algebra in the Sage language. If the optional value of the function is True, then the function changes the basis of the algebra to the basis given by the special_basis_nilp_lie_alg function.
+        
+        EXAMPLES:
+        
+            sage: L = solvable_lie_algebra(QQ, [3,2])
+
+            sage: L
+
+            Lie algebra on 3 generators (x0, x1, x2) over Rational Field
+        
+    '''
+    L = lie_alg_from_gap_to_sage( gap.SolvableLieAlgebra( F, args ))
+    return L
+    
+#-------------
+
+
+#-------------
 def isomorphic_random_nilp_lie_alg(L):
     '''
         INPUT:
@@ -371,7 +403,7 @@ def structure_constants(L, bLdada):
     '''
     bL = list(L.basis())
     dimL = len(bL)
-    R = PolynomialRing(QQ, dimL, "x")
+    R = PolynomialRing(QQ, dimL, L.basis().keys().list())
     FracR = FractionField(R)
     x = R.gens()
     M = matrix(FracR, dimL)
@@ -486,4 +518,11 @@ def lie_algebra_strict_upper_triangular_matrices(n):
     #return dict_lie
     L = LieAlgebra(QQ, dict_lie, names = keys)
     return L
+
+def standard_filiform_lie_algebra( n ):
+
+    vars = [ 'y'+str(k) for k in range( n-1 ) ] + ['x']
+    rel_dict = { ('x','y'+str(k)): {'y'+str(k-1): 1} for k in range(1,n-1) }
+    return LieAlgebra( QQ, rel_dict, vars )
+
 #-------------

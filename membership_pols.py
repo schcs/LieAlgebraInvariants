@@ -108,7 +108,9 @@ def alg_dependence( gens ):
     values = { R.gens()[i]: 0 for i in range( n )}
     values.update( { R.gens()[i+n]: R1.gens()[i] for i in range( nr_gens )})
     new_gens = [ x.subs( values ) for x in cent_gens ]
+    
     return R1.ideal( new_gens ).groebner_basis()
+    
 #-------------
 
 #-------------

@@ -28,24 +28,24 @@ def differential_operator( L, x ):
     
     F = L.base_ring()
     d = L.dimension()
-    bas = L.basis()
-    
+    bas = L.basis().list()
+
     if hasattr( L, "polynomialRing" ):
         P = L.polynomialRing
         F = L.fractionField
     else: 
-        P = PolynomialRing( F, d, bas.keys().list())
+        P = PolynomialRing( F, d, L.basis().keys().list())
         F = P.fraction_field()
         L.polynomialRing = P
         L.fractionField = F
 
     D = F.derivation_module()
     op = D.zero()
-
-    for k in bas.keys().list():
+    
+    for k in range( L.dimension()): #bas.keys().list():
         mc = L.bracket( x, bas[k] ).monomial_coefficients()
         d_coeff = sum( [mc[k]*F(k) for k in mc], P(0))
-        op += d_coeff*D.gens_dict()['d/d'+k]
+        op += d_coeff*D.gens()[k]#_dict()['d/d'+k]
 
     return op
 #-------------
@@ -436,16 +436,24 @@ def method_characteristics_simple(d, phi = 0):
 #-------------
 
 #-------------
-def invar_nilp_lie_alg_via_method_characteristics_simple(L):
+def invar_nilp_lie_alg_via_method_characteristics_simple(L, needs_basis_change = true ):
     bL = L.basis().list()
-    bEspL = special_basis_nilp_lie_alg(L)
-    Lesp = base_change_nilp_lie_alg(L, bEspL)
-    bEspLesp = special_basis_nilp_lie_alg(Lesp)
+
+    if needs_basis_change:
+        bEspL = special_basis_nilp_lie_alg(L)
+        Lesp = base_change_nilp_lie_alg(L, bEspL)
+    else:
+        bEspL = L.basis().list()
+        Lesp = L 
+
+    #bEspLesp = special_basis_nilp_lie_alg(Lesp)
+    bEspLesp = Lesp.basis().list()
     dimL = len(bL)
     F = Lesp.base_ring()
-    P = PolynomialRing( F, dimL, 'x' )
+    P = PolynomialRing( F, dimL, Lesp.basis().keys().list() )
     Lesp.polynomialRing = P
     Lesp.fractionField = P.fraction_field()
+
     if Lesp.center().dimension() == dimL:
         HomFracSR = Hom(Lesp.fractionField,Lesp.fractionField)
         phi = HomFracSR.identity()
@@ -458,6 +466,7 @@ def invar_nilp_lie_alg_via_method_characteristics_simple(L):
     first_not_center = 0
     while Lesp.gens()[first_not_center] in Lesp.center():
         first_not_center = first_not_center + 1
+
     d = differential_operator(Lesp, bEspLesp[first_not_center])
     phi = method_characteristics_simple(d)
     if phi == False:
@@ -480,4 +489,8 @@ def invar_nilp_lie_alg_via_method_characteristics_simple(L):
         HR[i] = HR[i].subs({HR[0].parent().gens()[k] : y[k] for k in range(len(HR[0].parent().gens()))})
     phi = HomFracSR(HR)
     return phi
+
+def invariant_field_isomorphism( L, needs_basis_change = true ):
+    return invar_nilp_lie_alg_via_method_characteristics_simple( L, 
+                                needs_basis_change = needs_basis_change )    
 #-------------
