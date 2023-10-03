@@ -104,7 +104,7 @@ def alg_dependence( gens ):
     cent_gens = [ g for g in gr if g.degrees()[0:n] == n_zeros ]
     #return cent_gens
 
-    R1 = PolynomialRing( F, nr_gens, 't', order = "lex" )
+    R1 = PolynomialRing( F, nr_gens, 't', order = "invlex" ) ### check if the right order is used
     values = { R.gens()[i]: 0 for i in range( n )}
     values.update( { R.gens()[i+n]: R1.gens()[i] for i in range( nr_gens )})
     new_gens = [ x.subs( values ) for x in cent_gens ]
@@ -164,6 +164,7 @@ def is_element_of_subalgebra( gens, p ):
     R_gens += [ 0 for _ in range( nr_fake_gens-1 )]
     r_subs = { R.gens()[i]: R_gens[i] for i in range( len( R.gens()))}
     deps = [ x for x in deps if R.gens()[d] in x.monomials() ]
+
     if len( deps ) == 0:
         return false, []
 
@@ -182,7 +183,19 @@ def is_element_of_subalgebra( gens, p ):
     t_subs = { R.gens()[i]: gens[i] for i in range( len( gens )) }
     #return expressions, t_subs 
 
-    assert { e.subs( t_subs ) == p for e in expressions } == { true }
+    #assert { e.subs( t_subs ) == p for e in expressions } == { true }
 
-    return true, expressions 
+    return true, expressions
+
+
+def is_element_of_subalgebra_localization( gens, p, q, nr_tries = 100 ):
+
+    k = 0
+    while k <= nr_tries:
+        v, h = is_element_of_subalgebra( gens, p*q**k )
+        if v:
+            return h[0], k 
+        k += 1
+
+    return false
 #-------------

@@ -519,7 +519,6 @@ def lie_algebra_strict_upper_triangular_matrices(n):
     L = LieAlgebra(QQ, dict_lie, names = keys)
     return L
 
-
 # the solvable Lie algebra of upper triangular matrices
 
 def lie_algebra_upper_triangular_matrices( n ):

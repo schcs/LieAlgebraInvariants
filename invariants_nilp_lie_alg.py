@@ -473,11 +473,13 @@ def invar_nilp_lie_alg_via_method_characteristics_simple(L, needs_basis_change =
         return False
     for i in range(first_not_center + 1, dimL):
         d = differential_operator(Lesp, bEspLesp[i])
+        print( i, d )
         #phi0 = phi
         phi = method_characteristics_simple(d, phi)
         #print( "succeed", d )
         if phi == False:
             return False#, phi0, d
+
     FracS = phi.domain()
     gens_domain_phi = phi.domain().gens()
     gens_codomain_phi = phi.codomain().gens()
