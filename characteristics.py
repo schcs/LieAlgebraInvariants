@@ -95,7 +95,8 @@ def integral_curves( d_op, P ):
     
     sols = [ x.rhs() for x in desolve_system( eqs, c_funcs, init_cond )]
     
-    sols = [ x.subs( { e**t: t} ) for x in sols ]
+    # substitute e^t with t. Check if this is valid!!!
+    sols = [ x.subs( { e**t: t } ) for x in sols ]
     return [ P(x) for x in sols ]
 
 
@@ -107,7 +108,7 @@ def invert_curves( int_curve ):
 
     first_with_t = next( c for c in int_curve if c != 0 and c % t == 0 )
     print( first_with_t )
-    q = first_with_t/t
+    q = t #first_with_t/t
     
     ims = [ is_element_of_subalgebra_localization( int_curve, y, q ) for y in [q] + [ x for x in P.gens() ]]
     F = ims[0][0].parent().fraction_field()
