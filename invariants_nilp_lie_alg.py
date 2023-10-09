@@ -50,6 +50,18 @@ def differential_operator( L, x ):
     return op
 #-------------
 
+def differential_operator_from_coeffs( P, coeffs ):
+
+
+    D = P.derivation_module()
+    op = D.zero()
+    
+    for k in range( len( coeffs )): 
+        op += coeffs[k]*D.gens()[k]
+
+    return op
+#-------------
+
 
 # Seja L uma álgebra de Lie nilpotente com base {x1, ..., xn} tal que, para todo x em L, [x, xi] é combinação linear de x1 até xi-1. Considere a derivação
 
@@ -259,6 +271,7 @@ def invar_nilp_lie_alg_via_matrix_exponential(L):
         list_pols = [0]*(len(gens_domain_phi))
         for j in range(len(gens_domain_phi)):
             list_pols[j] = phi(gens_domain_phi[j]).subs({gens_codomain_phi[k] : x[k] for k in range(len(gens_codomain_phi))})
+
         Sigma = matrix(QQ, len(gens_domain_phi))
         for j in range(len(gens_domain_phi)):
             if is_element_of_subalgebra(list_pols,d(list_pols[j]))[0] == False:
@@ -496,3 +509,5 @@ def invariant_field_isomorphism( L, needs_basis_change = true ):
     return invar_nilp_lie_alg_via_method_characteristics_simple( L, 
                                 needs_basis_change = needs_basis_change )    
 #-------------
+
+-x0*x3*x4*x5 + x0*x1*x5*x7 + x0*x2*x3*x8 - x0^2*x7*x8 - x0*x1*x2*x12 + x0^2*x4*x12
