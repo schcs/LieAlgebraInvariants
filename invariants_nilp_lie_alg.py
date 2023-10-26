@@ -442,14 +442,18 @@ def method_characteristics_simple(d, phi = 0):
             aux_c = is_element_of_subalgebra(list_pols,pols[i])[1][0]
             der_aux_c = P(aux_c.subs({aux_c.parent().gens()[j] : curve[j] for j in range(i)}))
             curve_without_const = polynomial_integral(der_aux_c)
-            inicial_value[i-1] = (gens[i] - curve_without_const.subs({t:q})).numerator()
-            inicial_value[i-1] = inicial_value[i-1]*inicial_value[i-1].denominator()
-            for j in range(i-1):
-                if inicial_value[j].divides(inicial_value[i-1]):
-                    inicial_value[i-1] = inicial_value[i-1]/inicial_value[j]
-                    inicial_value[i-1] = inicial_value[i-1].numerator()
-                    inicial_value[i-1] = inicial_value[i-1]*inicial_value[i-1].denominator()
+            inicial_value[i-1] = gens[i] - curve_without_const.subs({t:q})
             curve[i] = curve_without_const + inicial_value[i-1]
+    for i in range(len_gens - 1):
+        inicial_value[i] = inicial_value[i].numerator()
+        inicial_value[i] = inicial_value[i]*inicial_value[i].denominator()
+        inicial_value[i] = inicial_value[i]/1
+    for i in range(1,len_gens - 1):
+        for j in range(i):
+                if inicial_value[j].divides(inicial_value[i]):
+                    inicial_value[i] = inicial_value[i]/inicial_value[j]
+                    inicial_value[i] = inicial_value[i].numerator()
+                    inicial_value[i] = inicial_value[i]*inicial_value[i].denominator()
     phi = HomFracSR(inicial_value)
     return phi
 #-------------
