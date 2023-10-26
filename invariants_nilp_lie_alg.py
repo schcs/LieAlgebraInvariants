@@ -28,24 +28,24 @@ def differential_operator( L, x ):
     
     F = L.base_ring()
     d = L.dimension()
-    bas = L.basis().list()
-
+    
     if hasattr( L, "polynomialRing" ):
         P = L.polynomialRing
         F = L.fractionField
     else: 
-        P = PolynomialRing( F, d, L.basis().keys().list())
+        P = PolynomialRing( F, d, 'x' )
         F = P.fraction_field()
         L.polynomialRing = P
         L.fractionField = F
 
     D = F.derivation_module()
     op = D.zero()
-    
-    for k in range( L.dimension()): #bas.keys().list():
-        mc = L.bracket( x, bas[k] ).monomial_coefficients()
-        d_coeff = sum( [mc[k]*F(k) for k in mc], P(0))
-        op += d_coeff*D.gens()[k]#_dict()['d/d'+k]
+    bas = L.basis().list()
+
+    for i in range( d ):
+        coeffs = L.bracket( x, bas[i] ).dense_coefficient_list()
+        d_coeff = sum( coeffs[i]*F.gens()[i] for i in range( d ))
+        op += d_coeff*D.gens()[i]
 
     return op
 #-------------
@@ -210,289 +210,40 @@ def invar_nilp_matrix(Sigma):
 #-------------
 
 #-------------
-def invar_nilp_lie_alg_via_matrix_exponential(L):
-    r'''
-        INPUT:
-        
-            - 
-            
-        OUTPUT:
-            
-            - 
-
-        COMMENT:
-
-
-            
-        EXAMPLES:
-        
-            
-
-    '''
-    bL = L.basis().list()
-    bEspL = special_basis_nilp_lie_alg(L)
-    Lesp = base_change_nilp_lie_alg(L, bEspL)
-    bEspLesp = special_basis_nilp_lie_alg(Lesp)
-    dimL = len(bL)
-    F = Lesp.base_ring()
+def invar_nilp_lie_alg( L ):
+    #L = nilpotent_lie_algebra(F, args, True)
+    dimL = len(L.basis())
+    F = L.base_ring()
     P = PolynomialRing( F, dimL, 'x' )
-    Lesp.polynomialRing = P
-    Lesp.fractionField = P.fraction_field()
-    if Lesp.center().dimension() == dimL:
-        HomFracSR = Hom(Lesp.fractionField,Lesp.fractionField)
-        phi = HomFracSR.identity()
-        return phi
-    x = Lesp.polynomialRing.gens()
-    y = [0]*dimL
-    for i in range(dimL):
-        for j in range(dimL):
-            y[i] = y[i] + coord_base(L, bL, bEspL[i])[j]*x[j]
+    F = P.fraction_field()
+    L.polynomialRing = P
+    L.fractionField = F
+    x = L.polynomialRing.gens()
     first_not_center = 0
-    while Lesp.gens()[first_not_center] in Lesp.center():
+    while L.gens()[first_not_center] in L.center():
         first_not_center = first_not_center + 1
-    Sigma = adjoint_matrix_element(Lesp, Lesp.gens()[first_not_center])
-    phi = invar_nilp_matrix(Sigma)
+    Sigma = adjoint_matrix_element(L, L.gens()[first_not_center])
+    phi = invar_nilp_matrix_jordan(Sigma)
     gens_domain_phi = phi.domain().gens()
     gens_codomain_phi = phi.codomain().gens()
     for i in range(first_not_center + 1, dimL):
-        d = differential_operator(Lesp,Lesp.gens()[i])
+        d = differential_operator(L,L.gens()[i])
         list_pols = [0]*(len(gens_domain_phi))
         for j in range(len(gens_domain_phi)):
-            list_pols[j] = phi(gens_domain_phi[j]).subs({gens_codomain_phi[k] : x[k] for k in range(len(gens_codomain_phi))})
+            list_pols[j] = phi(gens_domain_phi[j]).subs({gens_codomain_phi[k] == x[k] for k in range(len(gens_codomain_phi))})
         Sigma = matrix(QQ, len(gens_domain_phi))
         for j in range(len(gens_domain_phi)):
-            if is_element_of_subalgebra(list_pols,d(list_pols[j]))[0] == False:
-                print("Etapa", end=": ")
-                print(i)
-                return print("Problema com a combinação linear de polinômios (pertencimento)")
             pol = is_element_of_subalgebra(list_pols,d(list_pols[j]))[1][0]
             if pol.degree() > 1:
-                print("Etapa", end=": ")
-                print(i)
-                return print("Problema com a combinação linear de polinômios (grau)")
+                return("Problema com a combinação linear de polinômios")
             for k in range(len(gens_domain_phi)):
                 Sigma[k,j] =  pol.coefficient(pol.parent().gens()[k])
         if Sigma != 0:
             x = [0]*(len(list_pols))
             for j in range(len(list_pols)):
                 x[j] = list_pols[j]
-            phi = invar_nilp_matrix(Sigma)
+            phi = invar_nilp_matrix_jordan(Sigma)
             gens_domain_phi = phi.domain().gens()
             gens_codomain_phi = phi.codomain().gens()
-    FracS = phi.domain()
-    HomFracSR = Hom(FracS,Lesp.fractionField)
-    HR = [0]*(len(gens_domain_phi))
-    for i in range(len(gens_domain_phi)):
-        HR[i] = phi(gens_domain_phi[i]).subs({gens_codomain_phi[k] : x[k] for k in range(len(gens_codomain_phi))})
-    for i in range(len(gens_domain_phi)):
-        HR[i] = HR[i].subs({HR[0].parent().gens()[k] : y[k] for k in range(len(HR[0].parent().gens()))})
-    phi = HomFracSR(HR)
     return phi
-#-------------
-
-#-------------
-def invar_test_nilp_lie_alg(L, phi):
-    r'''
-        INPUT:
-        
-            - 
-            
-        OUTPUT:
-            
-            - 
-
-        COMMENT:
-
-
-            
-        EXAMPLES:
-        
-            
-
-    '''
-    bL = L.basis().list()
-    M = structure_constants(L, bL)
-    rank_M = M.rank()
-    dimL = len(bL)
-    print("")
-    print("A dimensão da álgebra de Lie L é ", dimL, ".", sep="")
-    print("O posto da matriz das constantes estruturas de L é ", rank_M, ".", sep="")
-    print("Assim, o número de invariantes algebricamente independentes (?) é", end=": ")
-    print(dimL, " - ", rank_M ," = ", dimL - rank_M, ".", sep="")
-    gens_domain_phi = phi.domain().gens()
-    print("Tais invariantes são:")
-    for i in range(len(gens_domain_phi)):
-        print(phi(gens_domain_phi[i]))
-    print("")
-    dimL = len(bL)
-    d = [0]*dimL
-    print("As derivações são", end=": \n")
-    for i in range(dimL):
-        d[i] = differential_operator(L, bL[i])
-        print("d", i, " = ", d[i], sep="")
-    print("")
-    table = [[]]*(dimL + 1)
-    table[0] = [" "]
-    for i in range(1, dimL + 1):
-        table[i] = ["d"+str(i-1)]
-    for i in range(len(gens_domain_phi)):
-        table[0] = table[0] + [phi(gens_domain_phi[i])]
-    for i in range(len(gens_domain_phi)):
-        for j in range(1, dimL + 1):
-            table[j] = table[j] + [d[j-1](phi(gens_domain_phi[i]))]
-    print("Os valores das derivações aplicadas nos invariantes são apresentados na seguinte tabela:")
-    for i in range(dimL + 1):
-        for j in range(len(gens_domain_phi) + 1):
-            print(table[i][j], end="\t ")
-        print("")
-#-------------
-
-#-------------
-def polynomial_integral(pol):
-    P = pol.parent()
-    keys_pol = list(pol.dict().keys())
-    values_pol = list(pol.dict().values())
-    for i in range(len(keys_pol)):
-        keys_pol[i] = keys_pol[i] + 1
-    for i in range(len(keys_pol)):
-        values_pol[i] = values_pol[i]/keys_pol[i]
-    dict_pol = {}
-    for i in range(len(keys_pol)):
-        dict_pol[keys_pol[i]] = values_pol[i]
-    int_pol = P(dict_pol)
-    return int_pol
-#-------------
-
-#-------------
-def method_characteristics_simple(d, phi = 0):
-    domain_d = d.domain()
-    ring_domain_d = domain_d.ring()
-    emb = domain_d.coerce_map_from(ring_domain_d).section()
-    frac_domain_d = FractionField(domain_d)
-    gens = [0]*len(domain_d.gens())
-    for i in range(len(gens)):
-        gens[i] = emb(domain_d.gens()[i])
-        #gens[i] = domain_d.gens()[i]
-    if phi != 0:
-        gens_domain_phi = phi.domain().gens()
-        gens = [0]*len(gens_domain_phi)
-        for i in range(len(gens_domain_phi)):
-            f = phi(gens_domain_phi[i])
-            f.reduce()
-            gens[i] = emb(f.numerator())
-            #gens[i] = f
-    len_gens = len(gens)
-    pols = [0]*len_gens
-    curve = [0]*len_gens
-    inicial_value = [0]*(len_gens - 1)
-    S = PolynomialRing(QQ, len_gens - 1, "y")
-    FracS = FractionField(S)
-    HomFracSR = Hom(FracS,frac_domain_d)
-    for i in range(len_gens):
-        f = d(gens[i])
-        f.reduce()
-        pols[i] = f
-    if pols[0] != 0:
-        return False
-    first_not_zero = 0
-    for i in range(len_gens):
-        if pols[i] == 0:
-            first_not_zero = first_not_zero + 1
-        else:
-            break
-    if first_not_zero == len_gens:
-        S = PolynomialRing(QQ, len_gens, "y")
-        FracS = FractionField(S)
-        HomFracSR = Hom(FracS,frac_domain_d)
-        phi = HomFracSR(gens)
-        return phi
-    for i in range(first_not_zero):
-        curve[i] = gens[i]
-        inicial_value[i] = curve[i]
-    if first_not_zero == len_gens - 1:
-        phi = HomFracSR(inicial_value)
-        return phi
-    P = PolynomialRing(frac_domain_d, "t")
-    t = P.gens()[0]
-    curve[first_not_zero] = pols[first_not_zero]*t
-    q = gens[first_not_zero]/pols[first_not_zero]
-    for i in range(first_not_zero + 1, len_gens):
-        if pols[i] == 0:
-            curve[i] = gens[i]
-            inicial_value[i-1] = curve[i]
-        else:
-            list_pols = [0]*i
-            for j in range(i):
-                list_pols[j] = gens[j]
-            if is_element_of_subalgebra(list_pols,pols[i])[0] == False:
-                return False
-            aux_c = is_element_of_subalgebra(list_pols,pols[i])[1][0]
-            der_aux_c = P(aux_c.subs({aux_c.parent().gens()[j] : curve[j] for j in range(i)}))
-            curve_without_const = polynomial_integral(der_aux_c)
-            inicial_value[i-1] = gens[i] - curve_without_const.subs({t:q})
-            curve[i] = curve_without_const + inicial_value[i-1]
-    phi = HomFracSR(inicial_value)
-    return phi
-#-------------
-
-#-------------
-def invar_nilp_lie_alg_via_method_characteristics_simple(L, needs_basis_change = true ):
-    bL = L.basis().list()
-
-    if needs_basis_change:
-        bEspL = special_basis_nilp_lie_alg(L)
-        Lesp = base_change_nilp_lie_alg(L, bEspL)
-    else:
-        bEspL = L.basis().list()
-        Lesp = L 
-
-    #bEspLesp = special_basis_nilp_lie_alg(Lesp)
-    bEspLesp = Lesp.basis().list()
-    dimL = len(bL)
-    F = Lesp.base_ring()
-    P = PolynomialRing( F, dimL, Lesp.basis().keys().list() )
-    Lesp.polynomialRing = P
-    Lesp.fractionField = P.fraction_field()
-
-    if Lesp.center().dimension() == dimL:
-        HomFracSR = Hom(Lesp.fractionField,Lesp.fractionField)
-        phi = HomFracSR.identity()
-        return phi
-    x = Lesp.polynomialRing.gens()
-    y = [0]*dimL
-    for i in range(dimL):
-        for j in range(dimL):
-            y[i] = y[i] + coord_base(L, bL, bEspL[i])[j]*x[j]
-    first_not_center = 0
-    while Lesp.gens()[first_not_center] in Lesp.center():
-        first_not_center = first_not_center + 1
-
-    d = differential_operator(Lesp, bEspLesp[first_not_center])
-    phi = method_characteristics_simple(d)
-    if phi == False:
-        return False
-    for i in range(first_not_center + 1, dimL):
-        d = differential_operator(Lesp, bEspLesp[i])
-        print( i, d )
-        #phi0 = phi
-        phi = method_characteristics_simple(d, phi)
-        #print( "succeed", d )
-        if phi == False:
-            return False#, phi0, d
-
-    FracS = phi.domain()
-    gens_domain_phi = phi.domain().gens()
-    gens_codomain_phi = phi.codomain().gens()
-    HomFracSR = Hom(FracS,Lesp.fractionField)
-    HR = [0]*(len(gens_domain_phi))
-    for i in range(len(gens_domain_phi)):
-        HR[i] = phi(gens_domain_phi[i]).subs({gens_codomain_phi[k] : x[k] for k in range(len(gens_codomain_phi))})
-    for i in range(len(gens_domain_phi)):
-        HR[i] = HR[i].subs({HR[0].parent().gens()[k] : y[k] for k in range(len(HR[0].parent().gens()))})
-    phi = HomFracSR(HR)
-    return phi
-
-def invariant_field_isomorphism( L, needs_basis_change = true ):
-    return invar_nilp_lie_alg_via_method_characteristics_simple( L, 
-                                needs_basis_change = needs_basis_change )    
 #-------------
