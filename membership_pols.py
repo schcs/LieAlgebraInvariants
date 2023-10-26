@@ -148,6 +148,7 @@ def is_element_of_subalgebra( gens, p ):
 
             True
     '''
+    print( gens, p )
     gens_new = rational_functions_to_pols( gens + [p] )
     nr_fake_gens = len( gens_new ) - len( gens )
     #print( "new_gens are ", gens_new )
@@ -177,15 +178,12 @@ def is_element_of_subalgebra( gens, p ):
     #print( deps )
 
     expressions = [ deps[i] + (R.gens()[d]) for i in range( len( deps )) ]
+
+    degR = len( R.gens())
+    R0 = PolynomialRing( QQ, len(gens), [ str( R.gens()[x] ) for x in range( len(gens))])
+
     #return expressions
-    
-
-    t_subs = { R.gens()[i]: gens[i] for i in range( len( gens )) }
-    #return expressions, t_subs 
-
-    #assert { e.subs( t_subs ) == p for e in expressions } == { true }
-
-    return true, expressions
+    return true, [ R0( x ) for x in expressions ]
 
 
 def is_element_of_subalgebra_localization( gens, p, q, nr_tries = 100 ):
