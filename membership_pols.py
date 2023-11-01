@@ -148,7 +148,7 @@ def is_element_of_subalgebra( gens, p ):
 
             True
     '''
-    print( gens, p )
+
     gens_new = rational_functions_to_pols( gens + [p] )
     nr_fake_gens = len( gens_new ) - len( gens )
     #print( "new_gens are ", gens_new )

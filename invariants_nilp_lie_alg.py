@@ -437,9 +437,11 @@ def method_characteristics_simple(d, phi = 0):
             list_pols = [0]*i
             for j in range(i):
                 list_pols[j] = gens[j]
-            if is_element_of_subalgebra(list_pols,pols[i])[0] == False:
+            print( "gens are ", list_pols, "pol is", pols[i] )
+            is_el = is_element_of_subalgebra(list_pols,pols[i])
+            if is_el[0] == False:
                 return False
-            aux_c = is_element_of_subalgebra(list_pols,pols[i])[1][0]
+            aux_c = is_el[1][0]
             der_aux_c = P(aux_c.subs({aux_c.parent().gens()[j] : curve[j] for j in range(i)}))
             curve_without_const = polynomial_integral(der_aux_c)
             inicial_value[i-1] = gens[i] - curve_without_const.subs({t:q})
@@ -484,7 +486,7 @@ def invar_nilp_lie_alg_via_method_characteristics_simple(L, needs_basis_change =
     phi = method_characteristics_simple(d)
     if phi == False:
         return False
-    for i in range(first_not_center + 1, dimL):
+    for i in range(first_not_center+1, dimL):
         d = differential_operator(Lesp, bEspLesp[i])
         print( i, d )
         #phi0 = phi
@@ -510,4 +512,3 @@ def invariant_field_isomorphism( L, needs_basis_change = true ):
                                 needs_basis_change = needs_basis_change )    
 #-------------
 
--x0*x3*x4*x5 + x0*x1*x5*x7 + x0*x2*x3*x8 - x0^2*x7*x8 - x0*x1*x2*x12 + x0^2*x4*x12

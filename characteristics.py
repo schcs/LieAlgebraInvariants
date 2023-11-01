@@ -77,6 +77,7 @@ def desolve_system_alt( rhss, t, func_c, P ):
         sols.append( sol )
         for j in range( k+1, nr_eqs ):
             rhss[j] = rhss[j].subs( func_c[k] == sol )
+    
 
     return [ P( x ) for x in sols ]
 
@@ -183,10 +184,26 @@ def rational_invariant_field( l ):
     bas = [ x for x in l.basis() ]
     
     for i in range( d ):
-        print( "i is ", i )
-        d = differential_operator( l, bas[i] )
-        coeffs = [ is_element_of_subalgebra( gens[0:k], d(gens[k]) )[1][0] for k in range( len( gens ))]
         
+        d = differential_operator( l, bas[i] )
+        coeffs = [0]*len( gens )
+        for k in range( len( gens )):
+            d_gen = d(gens[k])
+            if d_gen == 0:
+                coeffs[k] = 0
+            else:
+                print( "k is ", k )
+                print( "i is", i, "gens are ", gens[0:k], "pol is", d_gen )
+                v, cs = is_element_of_subalgebra( gens[0:k], d_gen )
+                assert v
+                coeffs[k] = cs[0]
+        
+        print( coeffs )
+        
+        #coeffs = [ is_element_of_subalgebra( gens[0:k], d(gens[k]) )[1][0] for k in range( len( gens ))]
+        
+        print( i, d )
+
         Pt = PolynomialRing( QQ, len( gens ), ['t'+str(i) for i in range( len( gens ))])
         dt = differential_operator_from_coeffs( Pt, coeffs )
     
@@ -215,13 +232,13 @@ def rational_invariant_field_2( l ):
     m = structure_constants( l, l.basis()).rref()
 
     for i in range( m.nrow ):
-        print( "i is ", i )
         
         r = m[i]*lcm( x.denominator() for x in m[i] )
         r = ( P(x) for x in r )
 
 
         d = differential_operator_with_coeffs( P, r )
+        print( i, d )
         coeffs = [ is_element_of_subalgebra( gens[0:k], d(gens[k]) )[1][0] for k in range( len( gens ))]
         
         Pt = PolynomialRing( QQ, len( gens ), ['t'+str(i) for i in range( len( gens ))])
