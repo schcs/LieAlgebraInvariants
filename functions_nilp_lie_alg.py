@@ -491,7 +491,7 @@ def lie_algebra_strict_upper_triangular_matrices(n):
             if j <= i:
                 basis_lie_alg[i] = basis_lie_alg[i] + [0]
             else:
-                basis_lie_alg[i] = basis_lie_alg[i] + ["x" + str(i) + str(j)]           
+                basis_lie_alg[i] = basis_lie_alg[i] + ["E" + str(i+1) + str(j+1)]           
     dict_matr_lie = {}
     for i in range(n):
         for j in range(n):
