@@ -575,5 +575,39 @@ def standard_filiform_lie_algebra( n ):
     vars = [ 'y'+str(k) for k in range( n-1 ) ] + ['x']
     rel_dict = { ('x','y'+str(k)): {'y'+str(k-1): 1} for k in range(1,n-1) }
     return LieAlgebra( QQ, rel_dict, vars )
+#-------------
 
+#-------------
+def solvable_lie_triangular_base(L):
+    dimL = L.dimension()
+    triagBase = [0]*dimL
+    D = L.derived_series()
+    I = D[len(D)-2]
+    dimI = I.dimension()
+    triagBaseTrunc = [0]*dimI
+    for i in range(dimI):
+        triagBase[i] = I.gens()[i]
+        triagBaseTrunc[i] = I.gens()[i]
+    while triagBase[dimL-1] == 0:
+        Q = L.quotient(I)
+        D = Q.derived_series()
+        Iaux = D[len(D)-2]
+        preImaIaux = [0]*(Iaux.dimension())
+        for i in range(Iaux.dimension()):
+            preImaIaux[i] = Q.lift(Iaux.gens()[i])
+            triagBase[i+dimI] = preImaIaux[i]
+        triagBaseTrunc = triagBaseTrunc + preImaIaux
+        I = L.ideal(triagBaseTrunc)
+        dimI = I.dimension()
+    return triagBase
+#-------------
+
+#-------------
+def matrix_adjoint_element(L, bL, x):
+    dimL = L.dimension()
+    M = Matrix(QQ,dimL)
+    for j in range(dimL):
+        for i in range(dimL):
+             M[i,j] = M[i,j] + coord_base(L, bL, L.bracket(x,bL[j]))[i]
+    return M
 #-------------
