@@ -44,6 +44,7 @@ def differential_operator( L, x ):
 
     for i in range( d ):
         coeffs = L.bracket( x, bas[i] ).dense_coefficient_list()
+        print( coeffs )
         d_coeff = sum( coeffs[i]*F.gens()[i] for i in range( d ))
         op += d_coeff*D.gens()[i]
 
@@ -421,7 +422,7 @@ def method_characteristics_simple(d, phi = 0):
 #-------------
 
 #-------------
-def invariant_field_generators( L, needs_basis_change = true ):
+def invar_nilp_lie_alg_via_method_characteristics_simple(L, needs_basis_change = true ):
     bL = L.basis().list()
 
     if needs_basis_change:
