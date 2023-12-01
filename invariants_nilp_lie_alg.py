@@ -132,59 +132,6 @@ def polynomial_integral(pol):
     return int_pol
 #-------------
 
-def kernel( d, phi = 0 ):
-    r'''
-    Calculates the kernel of a differential operator if such a calculation is possible with the existing algorithms.
-    '''
-    
-    
-
-    domain_d = d.domain()
-    gens = domain_d.gens()
-
-    if d == 0:
-        return gens
-
-    len_gens = len(gens)
-    pols = [0]*len_gens
-    curve = [0]*len_gens
-    inicial_value = [0]*(len_gens - 1)
-    S = PolynomialRing(QQ, len_gens - 1, "y")
-    FracS = FractionField(S)
-
-    pols = d.list()
-
-    # find the position of the first non-zero element in the list
-    first_non_zero = next((i for i, x in enumerate(pols) if x != 0 ), None )
-
-
-    P.<t> = PolynomialRing(frac_domain_d, "t")
-    curve[first_not_zero] = pols[first_not_zero]*t
-    q = gens[first_not_zero]/pols[first_not_zero]
-
-    curve = gens[0:first_non_zero]
-    inicial_value = curve
-
-
-    for i in range(first_not_zero + 1, len_gens):
-        if pols[i] == 0:
-            curve[i] = gens[i]
-            inicial_value[i-1] = curve[i]
-        else:
-            list_pols = [0]*i
-            for j in range(i):
-                list_pols[j] = gens[j]
-            print( "gens are ", list_pols, "pol is", pols[i] )
-            is_el = is_element_of_subalgebra(list_pols,pols[i])
-            if is_el[0] == False:
-                return False
-            aux_c = is_el[1][0]
-            der_aux_c = P(aux_c.subs({aux_c.parent().gens()[j] : curve[j] for j in range(i)}))
-            curve_without_const = polynomial_integral(der_aux_c)
-            inicial_value[i-1] = gens[i] - curve_without_const.subs({t:q})
-            curve[i] = curve_without_const + inicial_value[i-1]
-    
-integrate( )
 
 #-------------
 def method_characteristics_simple(d, phi = 0):
