@@ -1,4 +1,13 @@
+# The differential operator on P whose coefficients are given by the lis coeffs 
+# 
+
+def differential_operator_from_coeffs( P, coeffs ):
+
+    D = P.derivation_module()
+    return sum( coeffs[k]*D.gens()[k] for k in range( D.dimension()))
+
 #-------------
+
 def differential_operator( L, x ):
     r'''
         INPUT:
@@ -26,41 +35,29 @@ def differential_operator( L, x ):
 
     '''
     
-    F = L.base_ring()
     d = L.dimension()
     bas = L.basis().list()
 
+    # The Lie algebra L should have a polynomial ring and a fraction field set up
+    # if not, we create them and set them up
     if hasattr( L, "polynomialRing" ):
         P = L.polynomialRing
         F = L.fractionField
     else: 
-        P = PolynomialRing( F, d, L.basis().keys().list())
+        P = PolynomialRing( L.base_ring(), d, L.basis().keys().list())
         F = P.fraction_field()
         L.polynomialRing = P
         L.fractionField = F
 
-    D = F.derivation_module()
-    op = D.zero()
+    # calculate the coefficients of the operator
+    # they are [x,b_i] where b_1,...,b_n is the basis
+    coeffs = [ F(L.bracket( x, b )) for b in bas ]
     
-    for k in range( L.dimension()): #bas.keys().list():
-        mc = L.bracket( x, bas[k] ).monomial_coefficients()
-        d_coeff = sum( [mc[k]*F(k) for k in mc], P(0))
-        op += d_coeff*D.gens()[k]#_dict()['d/d'+k]
+    # construct and return the operator
+    return differential_operator_from_coeffs( F, coeffs )
 
-    return op
 #-------------
 
-def differential_operator_from_coeffs( P, coeffs ):
-
-
-    D = P.derivation_module()
-    op = D.zero()
-    
-    for k in range( len( coeffs )): 
-        op += coeffs[k]*D.gens()[k]
-
-    return op
-#-------------
 
 
 # Seja L uma álgebra de Lie nilpotente com base {x1, ..., xn} tal que, para todo x em L, [x, xi] é combinação linear de x1 até xi-1. Considere a derivação
@@ -376,6 +373,60 @@ def polynomial_integral(pol):
     return int_pol
 #-------------
 
+def kernel( d, phi = 0 ):
+    r'''
+    Calculates the kernel of a differential operator if such a calculation is possible with the existing algorithms.
+    '''
+    
+    
+
+    domain_d = d.domain()
+    gens = domain_d.gens()
+
+    if d == 0:
+        return gens
+
+    len_gens = len(gens)
+    pols = [0]*len_gens
+    curve = [0]*len_gens
+    inicial_value = [0]*(len_gens - 1)
+    S = PolynomialRing(QQ, len_gens - 1, "y")
+    FracS = FractionField(S)
+
+    pols = d.list()
+
+    # find the position of the first non-zero element in the list
+    first_non_zero = next((i for i, x in enumerate(pols) if x != 0 ), None )
+
+
+    P.<t> = PolynomialRing(frac_domain_d, "t")
+    curve[first_not_zero] = pols[first_not_zero]*t
+    q = gens[first_not_zero]/pols[first_not_zero]
+
+    curve = gens[0:first_non_zero]
+    inicial_value = curve
+
+
+    for i in range(first_not_zero + 1, len_gens):
+        if pols[i] == 0:
+            curve[i] = gens[i]
+            inicial_value[i-1] = curve[i]
+        else:
+            list_pols = [0]*i
+            for j in range(i):
+                list_pols[j] = gens[j]
+            print( "gens are ", list_pols, "pol is", pols[i] )
+            is_el = is_element_of_subalgebra(list_pols,pols[i])
+            if is_el[0] == False:
+                return False
+            aux_c = is_el[1][0]
+            der_aux_c = P(aux_c.subs({aux_c.parent().gens()[j] : curve[j] for j in range(i)}))
+            curve_without_const = polynomial_integral(der_aux_c)
+            inicial_value[i-1] = gens[i] - curve_without_const.subs({t:q})
+            curve[i] = curve_without_const + inicial_value[i-1]
+    
+integrate( )
+
 #-------------
 def method_characteristics_simple(d, phi = 0):
     domain_d = d.domain()
@@ -405,6 +456,7 @@ def method_characteristics_simple(d, phi = 0):
         f = d(gens[i])
         f.reduce()
         pols[i] = f
+    
     if pols[0] != 0:
         return False
     first_not_zero = 0
@@ -413,6 +465,8 @@ def method_characteristics_simple(d, phi = 0):
             first_not_zero = first_not_zero + 1
         else:
             break
+
+
     if first_not_zero == len_gens:
         S = PolynomialRing(QQ, len_gens, "y")
         FracS = FractionField(S)
@@ -446,6 +500,9 @@ def method_characteristics_simple(d, phi = 0):
             curve_without_const = polynomial_integral(der_aux_c)
             inicial_value[i-1] = gens[i] - curve_without_const.subs({t:q})
             curve[i] = curve_without_const + inicial_value[i-1]
+
+    return curve, inicial_value
+    
     for i in range(len_gens - 1):
         inicial_value[i] = inicial_value[i].numerator()
         inicial_value[i] = inicial_value[i]*inicial_value[i].denominator()

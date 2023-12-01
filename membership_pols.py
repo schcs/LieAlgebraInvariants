@@ -149,11 +149,11 @@ def is_element_of_subalgebra( gens, p ):
             True
     '''
 
-    gens_new = rational_functions_to_pols( gens + [p] )
+    gens_new = rational_functions_to_pols( gens + [p] ); 
     nr_fake_gens = len( gens_new ) - len( gens )
     #print( "new_gens are ", gens_new )
     #return gens_new
-    deps = alg_dependence( gens_new )
+    deps = alg_dependence( gens_new ); 
     #return deps 
     d = len( gens )
     
@@ -164,13 +164,13 @@ def is_element_of_subalgebra( gens, p ):
     R_gens = [ x for x in R.gens()[0:len(gens)+1]]
     R_gens += [ 0 for _ in range( nr_fake_gens-1 )]
     r_subs = { R.gens()[i]: R_gens[i] for i in range( len( R.gens()))}
-    deps = [ x for x in deps if R.gens()[d] in x.monomials() ]
+    deps = [ x for x in deps if R.gens()[d] in x.monomials() ]; 
 
     if len( deps ) == 0:
         return false, []
 
     #return deps
-    deps = [ d.subs( r_subs ) for d in deps ]
+    deps = [ d.subs( r_subs ) for d in deps ]; 
     
     coeffs = [ x.coefficient( R.gens()[d] ) for x in deps ]
     deps = [ -(coeffs[k]**-1)*deps[k] for k in range( len( deps )) ]
