@@ -457,6 +457,107 @@ def standard_filiform_lie_algebra( n ):
 #-------------
 
 #-------------
+def triangular_basis_nilpotent_lie_algebra(L):
+    r'''
+        INPUT:
+        
+            -
+            
+        OUTPUT:
+            
+            -
+        
+        COMMENT:
+        
+            
+        
+        EXAMPLES:
+        
+            
+
+    '''
+    baseL = list(L.basis()) # base de L no formato de lista
+    dimL = len(baseL)
+    Z = L.center() # centro de L
+    baseZ = list(Z.basis())
+    dimZ = len(baseZ) 
+    baseLnova = [0]*dimL # base que vamos devolver ao final da computação
+    baseLnovaTrun = [0]*dimZ 
+    for i in range(dimZ):
+        baseLnova[i] = baseZ[i]
+        baseLnovaTrun[i] = baseZ[i]
+    Q = L.quotient(Z) # quociente L/Z
+    ZQ = Q.center() # centro de L/Z
+    baseZQ = list(ZQ.basis()) # base de Z(L/Z)
+    dimZQ = len(baseZQ)
+    preImBaseZQ = [0]*dimZQ
+    for i in range(dimZ, dimZ + dimZQ):
+        baseLnova[i] = Q.lift(baseZQ[i - dimZ]) 
+        preImBaseZQ[i - dimZ] = Q.lift(baseZQ[i - dimZ]) # pré-imagem da base de Z(L/Z)
+    baseLnovaTrun = baseLnovaTrun + preImBaseZQ
+    cont = len(baseLnovaTrun)
+    while cont < dimL:
+        I = L.ideal(baseLnovaTrun)
+        Q = L.quotient(I)
+        ZQ = Q.center()
+        baseZQ = list(ZQ.basis())
+        dimZQ = len(baseZQ)
+        preImBaseZQ = [0]*dimZQ
+        for i in range(cont, cont+dimZQ):
+            baseLnova[i] = Q.lift(baseZQ[i - cont])
+            preImBaseZQ[i - cont] = Q.lift(baseZQ[i - cont])
+        cont = cont + dimZQ
+        baseLnovaTrun = baseLnovaTrun + preImBaseZQ
+    return baseLnova
+#-------------
+
+#-------------
+def triangular_basis_solvable_lie_algebra(L):
+    r'''
+        INPUT:
+        
+            -
+            
+        OUTPUT:
+            
+            -
+        
+        COMMENT:
+        
+            
+        
+        EXAMPLES:
+        
+            
+
+    '''
+    dimL = L.dimension()
+    bL = L.basis().list()
+    V = VectorSpace(QQ,dimL)
+    bV = V.basis()
+    serie = L.derived_series()
+    n = len(serie)
+    serieV = [0]*n
+    for i in range(n):
+        bS = serie[i].gens()
+        serieV[i] = V.subspace_with_basis([V(coord_base(L,bL,bS[j])) for j in range(len(bS))])
+    Q = serieV[n-2].quotient(serieV[n-1])
+    bVserie = [V(Q.lift(Q.basis()[i])) for i in range(len(Q.basis()))]
+    aux = n-2
+    while aux !=0:
+        aux = aux - 1
+        Q = serieV[aux].quotient(serieV[aux+1])
+        bVserie = bVserie + [V(Q.lift(Q.basis()[i])) for i in range(len(Q.basis()))]
+    baseTriang = []
+    for i in range(len(bVserie)):
+        a = 0
+        for j in range(dimL):
+            a = a + bVserie[i][j]*bL[j]
+        baseTriang = baseTriang + [a]
+    return baseTriang
+#-------------
+
+#-------------
 def triangular_basis_lie_algebra(L):
     r'''
         INPUT:
@@ -477,61 +578,9 @@ def triangular_basis_lie_algebra(L):
 
     '''
     if L.is_nilpotent():
-        baseL = list(L.basis()) # base de L no formato de lista
-        dimL = len(baseL)
-        Z = L.center() # centro de L
-        baseZ = list(Z.basis())
-        dimZ = len(baseZ) 
-        baseLnova = [0]*dimL # base que vamos devolver ao final da computação
-        baseLnovaTrun = [0]*dimZ 
-        for i in range(dimZ):
-            baseLnova[i] = baseZ[i]
-            baseLnovaTrun[i] = baseZ[i]
-        Q = L.quotient(Z) # quociente L/Z
-        ZQ = Q.center() # centro de L/Z
-        baseZQ = list(ZQ.basis()) # base de Z(L/Z)
-        dimZQ = len(baseZQ)
-        preImBaseZQ = [0]*dimZQ
-        for i in range(dimZ, dimZ + dimZQ):
-            baseLnova[i] = Q.lift(baseZQ[i - dimZ]) 
-            preImBaseZQ[i - dimZ] = Q.lift(baseZQ[i - dimZ]) # pré-imagem da base de Z(L/Z)
-        baseLnovaTrun = baseLnovaTrun + preImBaseZQ
-        cont = len(baseLnovaTrun)
-        while cont < dimL:
-            I = L.ideal(baseLnovaTrun)
-            Q = L.quotient(I)
-            ZQ = Q.center()
-            baseZQ = list(ZQ.basis())
-            dimZQ = len(baseZQ)
-            preImBaseZQ = [0]*dimZQ
-            for i in range(cont, cont+dimZQ):
-                baseLnova[i] = Q.lift(baseZQ[i - cont])
-                preImBaseZQ[i - cont] = Q.lift(baseZQ[i - cont])
-            cont = cont + dimZQ
-            baseLnovaTrun = baseLnovaTrun + preImBaseZQ
-        return baseLnova
+        return triangular_basis_nilpotent_lie_algebra(L)
     if L.is_solvable():
-        dimL = L.dimension()
-        triagBase = [0]*dimL
-        D = L.derived_series()
-        I = D[len(D)-2]
-        dimI = I.dimension()
-        triagBaseTrunc = [0]*dimI
-        for i in range(dimI):
-            triagBase[i] = I.gens()[i]
-            triagBaseTrunc[i] = I.gens()[i]
-        while triagBase[dimL-1] == 0:
-            Q = L.quotient(I)
-            D = Q.derived_series()
-            Iaux = D[len(D)-2]
-            preImaIaux = [0]*(Iaux.dimension())
-            for i in range(Iaux.dimension()):
-                preImaIaux[i] = Q.lift(Iaux.gens()[i])
-                triagBase[i+dimI] = preImaIaux[i]
-            triagBaseTrunc = triagBaseTrunc + preImaIaux
-            I = L.ideal(triagBaseTrunc)
-            dimI = I.dimension()
-        return triagBase
+        return triangular_basis_solvable_lie_algebra(L)
 #-------------
 
 #-------------

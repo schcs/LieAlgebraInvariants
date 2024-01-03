@@ -1,13 +1,4 @@
-# The differential operator on P whose coefficients are given by the lis coeffs 
-# 
-
-def differential_operator_from_coeffs( P, coeffs ):
-
-    D = P.derivation_module()
-    return sum( coeffs[k]*D.gens()[k] for k in range( D.dimension()))
-
 #-------------
-
 def differential_operator( L, x ):
     r'''
         INPUT:
@@ -35,29 +26,41 @@ def differential_operator( L, x ):
 
     '''
     
+    F = L.base_ring()
     d = L.dimension()
     bas = L.basis().list()
 
-    # The Lie algebra L should have a polynomial ring and a fraction field set up
-    # if not, we create them and set them up
     if hasattr( L, "polynomialRing" ):
         P = L.polynomialRing
         F = L.fractionField
     else: 
-        P = PolynomialRing( L.base_ring(), d, L.basis().keys().list())
+        P = PolynomialRing( F, d, L.basis().keys().list())
         F = P.fraction_field()
         L.polynomialRing = P
         L.fractionField = F
 
-    # calculate the coefficients of the operator
-    # they are [x,b_i] where b_1,...,b_n is the basis
-    coeffs = [ F(L.bracket( x, b )) for b in bas ]
+    D = F.derivation_module()
+    op = D.zero()
     
-    # construct and return the operator
-    return differential_operator_from_coeffs( F, coeffs )
+    for k in range( L.dimension()): #bas.keys().list():
+        mc = L.bracket( x, bas[k] ).monomial_coefficients()
+        d_coeff = sum( [mc[k]*F(k) for k in mc], P(0))
+        op += d_coeff*D.gens()[k]#_dict()['d/d'+k]
 
+    return op
 #-------------
 
+def differential_operator_from_coeffs( P, coeffs ):
+
+
+    D = P.derivation_module()
+    op = D.zero()
+    
+    for k in range( len( coeffs )): 
+        op += coeffs[k]*D.gens()[k]
+
+    return op
+#-------------
 
 #-------------
 def invar_test_nilp_lie_alg(L, phi):
@@ -132,16 +135,15 @@ def polynomial_integral(pol):
     return int_pol
 #-------------
 
-
 #-------------
-def method_characteristics_simple(d, phi = 0):
+def method_characteristics_nilpotent(d, phi = 0):
     domain_d = d.domain()
-    ring_domain_d = domain_d.ring()
-    emb = domain_d.coerce_map_from(ring_domain_d).section()
     frac_domain_d = FractionField(domain_d)
-    gens = [0]*len(domain_d.gens())
+    ring_domain_d = frac_domain_d.ring()
+    emb = frac_domain_d.coerce_map_from(ring_domain_d).section()
+    gens = [0]*len(frac_domain_d.gens())
     for i in range(len(gens)):
-        gens[i] = emb(domain_d.gens()[i])
+        gens[i] = emb(frac_domain_d.gens()[i])
         #gens[i] = domain_d.gens()[i]
     if phi != 0:
         gens_domain_phi = phi.domain().gens()
@@ -162,7 +164,6 @@ def method_characteristics_simple(d, phi = 0):
         f = d(gens[i])
         f.reduce()
         pols[i] = f
-    
     if pols[0] != 0:
         return False
     first_not_zero = 0
@@ -171,8 +172,6 @@ def method_characteristics_simple(d, phi = 0):
             first_not_zero = first_not_zero + 1
         else:
             break
-
-
     if first_not_zero == len_gens:
         S = PolynomialRing(QQ, len_gens, "y")
         FracS = FractionField(S)
@@ -206,9 +205,6 @@ def method_characteristics_simple(d, phi = 0):
             curve_without_const = polynomial_integral(der_aux_c)
             inicial_value[i-1] = gens[i] - curve_without_const.subs({t:q})
             curve[i] = curve_without_const + inicial_value[i-1]
-
-    return curve, inicial_value
-    
     for i in range(len_gens - 1):
         inicial_value[i] = inicial_value[i].numerator()
         inicial_value[i] = inicial_value[i]*inicial_value[i].denominator()
@@ -221,6 +217,38 @@ def method_characteristics_simple(d, phi = 0):
                     inicial_value[i] = inicial_value[i]*inicial_value[i].denominator()
     phi = HomFracSR(inicial_value)
     return phi
+#-------------
+
+#-------------
+def method_characteristics_diagonal(d, phi = 0):
+    domain_d = d.domain()
+    frac_domain_d = FractionField(domain_d)
+    ring_domain_d = frac_domain_d.ring()
+    gens = frac_domain_d.gens()
+    if phi != 0:
+        gens = phi
+    coeff = [d(gens[i]) for i in range(len(gens))]
+    first_not_zero = 0
+    aux_bool = True
+    while aux_bool:
+        if coeff[first_not_zero] == 0:
+            first_not_zero = first_not_zero + 1
+        else:
+            aux_bool = False
+        if first_not_zero == len(coeff):
+            return gens
+    a = ring_domain_d(coeff[first_not_zero].numerator()).coefficients()[0]
+    asign = a.sign()
+    aabs = a.abs()
+    s = gens[first_not_zero]**asign
+    inv = [gens[i] for i in range(first_not_zero)]
+    for i in range(first_not_zero + 1, len(gens)):
+        if coeff[i] == 0:
+            inv = inv + [gens[i]]
+        else:
+            a = ring_domain_d(coeff[i].numerator()).coefficients()[0]
+            inv = inv + [gens[i]/s**(a/aabs)]
+    return inv
 #-------------
 
 #-------------
@@ -253,14 +281,14 @@ def generators_algebra_rational_invariants(L, needs_basis_change = true ):
         first_not_center = first_not_center + 1
 
     d = differential_operator(Lesp, bEspLesp[first_not_center])
-    phi = method_characteristics_simple(d)
+    phi = method_characteristics_nilpotent(d)
     if phi == False:
         return False
     for i in range(first_not_center+1, dimL):
         d = differential_operator(Lesp, bEspLesp[i])
         print( i, d )
         #phi0 = phi
-        phi = method_characteristics_simple(d, phi)
+        phi = method_characteristics_nilpotent(d, phi)
         #print( "succeed", d )
         if phi == False:
             return False#, phi0, d
