@@ -83,6 +83,8 @@ def satisfies_jacobi(L):
 #-------------
 
 #-------------
+
+# triangular_basis
 def special_basis_nilp_lie_alg(L):
     r'''
         INPUT:
@@ -585,9 +587,11 @@ def solvable_lie_triangular_base(L):
     I = D[len(D)-2]
     dimI = I.dimension()
     triagBaseTrunc = [0]*dimI
+    
     for i in range(dimI):
         triagBase[i] = I.gens()[i]
         triagBaseTrunc[i] = I.gens()[i]
+    
     while triagBase[dimL-1] == 0:
         Q = L.quotient(I)
         D = Q.derived_series()
