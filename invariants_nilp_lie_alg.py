@@ -63,6 +63,7 @@ def differential_operator_from_coeffs( P, coeffs ):
     return op
 #-------------
 
+<<<<<<< HEAD
 
 # Seja L uma álgebra de Lie nilpotente com base {x1, ..., xn} tal que, para todo x em L, [x, xi] é combinação linear de x1 até xi-1. Considere a derivação
 
@@ -270,6 +271,8 @@ def invar_nilp_lie_alg( L ):
     return alpha
 #-------------
 
+=======
+>>>>>>> debbce76a8ae190dda3237006091cb7893ab0c40
 #-------------
 def invar_test_nilp_lie_alg(L, phi):
     r'''
@@ -344,14 +347,14 @@ def polynomial_integral(pol):
 #-------------
 
 #-------------
-def method_characteristics_simple(d, phi = 0):
+def method_characteristics_nilpotent(d, phi = 0):
     domain_d = d.domain()
-    ring_domain_d = domain_d.ring()
-    emb = domain_d.coerce_map_from(ring_domain_d).section()
     frac_domain_d = FractionField(domain_d)
-    gens = [0]*len(domain_d.gens())
+    ring_domain_d = frac_domain_d.ring()
+    emb = frac_domain_d.coerce_map_from(ring_domain_d).section()
+    gens = [0]*len(frac_domain_d.gens())
     for i in range(len(gens)):
-        gens[i] = emb(domain_d.gens()[i])
+        gens[i] = emb(frac_domain_d.gens()[i])
         #gens[i] = domain_d.gens()[i]
     if phi != 0:
         gens_domain_phi = phi.domain().gens()
@@ -428,17 +431,49 @@ def method_characteristics_simple(d, phi = 0):
 #-------------
 
 #-------------
-def invar_nilp_lie_alg_via_method_characteristics_simple(L, needs_basis_change = true ):
+def method_characteristics_diagonal(d, phi = 0):
+    domain_d = d.domain()
+    frac_domain_d = FractionField(domain_d)
+    ring_domain_d = frac_domain_d.ring()
+    gens = frac_domain_d.gens()
+    if phi != 0:
+        gens = phi
+    coeff = [d(gens[i]) for i in range(len(gens))]
+    first_not_zero = 0
+    aux_bool = True
+    while aux_bool:
+        if coeff[first_not_zero] == 0:
+            first_not_zero = first_not_zero + 1
+        else:
+            aux_bool = False
+        if first_not_zero == len(coeff):
+            return gens
+    a = ring_domain_d(coeff[first_not_zero].numerator()).coefficients()[0]
+    asign = a.sign()
+    aabs = a.abs()
+    s = gens[first_not_zero]**asign
+    inv = [gens[i] for i in range(first_not_zero)]
+    for i in range(first_not_zero + 1, len(gens)):
+        if coeff[i] == 0:
+            inv = inv + [gens[i]]
+        else:
+            a = ring_domain_d(coeff[i].numerator()).coefficients()[0]
+            inv = inv + [gens[i]/s**(a/aabs)]
+    return inv
+#-------------
+
+#-------------
+def generators_algebra_rational_invariants(L, needs_basis_change = true ):
     bL = L.basis().list()
 
     if needs_basis_change:
-        bEspL = special_basis_nilp_lie_alg(L)
+        bEspL = triangular_basis_lie_algebra(L)
         Lesp = base_change_nilp_lie_alg(L, bEspL)
     else:
         bEspL = L.basis().list()
         Lesp = L 
 
-    #bEspLesp = special_basis_nilp_lie_alg(Lesp)
+    #bEspLesp = triangular_basis_lie_algebra(Lesp)
     bEspLesp = Lesp.basis().list()
     dimL = len(bL)
     F = Lesp.base_ring()
@@ -450,21 +485,21 @@ def invar_nilp_lie_alg_via_method_characteristics_simple(L, needs_basis_change =
     if Lesp.center().dimension() == dimL:
         HomFracSR = Hom(Lesp.fractionField,Lesp.fractionField)
         phi = HomFracSR.identity()
-        return phi
+        return [phi(phi.domain().gens()[i]) for i in range(len(phi.domain().gens()))]
 
     first_not_center = 0
     while Lesp.gens()[first_not_center] in Lesp.center():
         first_not_center = first_not_center + 1
 
     d = differential_operator(Lesp, bEspLesp[first_not_center])
-    phi = method_characteristics_simple(d)
+    phi = method_characteristics_nilpotent(d)
     if phi == False:
         return False
     for i in range(first_not_center+1, dimL):
         d = differential_operator(Lesp, bEspLesp[i])
         print( i, d )
         #phi0 = phi
-        phi = method_characteristics_simple(d, phi)
+        phi = method_characteristics_nilpotent(d, phi)
         #print( "succeed", d )
         if phi == False:
             return False#, phi0, d
@@ -487,7 +522,7 @@ def invar_nilp_lie_alg_via_method_characteristics_simple(L, needs_basis_change =
     
     
     L2 = base_change_nilp_lie_alg(L, bL)
-    bEspL2 = special_basis_nilp_lie_alg(L2)
+    bEspL2 = triangular_basis_lie_algebra(L2)
     xstr1 = [str(i) for i in bEspL]
     xstr2 = [str(i) for i in bEspL2]
     Pol1 = PolynomialRing( F, dimL, xstr1 )
@@ -503,11 +538,15 @@ def invar_nilp_lie_alg_via_method_characteristics_simple(L, needs_basis_change =
     P3 = PolynomialRing( F, dimL, L.basis().keys().list() )
     HomFracSR = Hom(FracS,FractionField(P3))
     alpha = HomFracSR(HR)
-    return alpha
-
-def invariant_field_isomorphism( L, needs_basis_change = true ):
-    return invar_nilp_lie_alg_via_method_characteristics_simple( L, 
-                                needs_basis_change = needs_basis_change )    
+    return [alpha(alpha.domain().gens()[i]) for i in range(len(alpha.domain().gens()))]
 #-------------
 
+<<<<<<< HEAD
 #-x0*x3*x4*x5 + x0*x1*x5*x7 + x0*x2*x3*x8 - x0^2*x7*x8 - x0*x1*x2*x12 + x0^2*x4*x12
+=======
+#-------------
+def invariant_field_isomorphism( L, needs_basis_change = true ):
+    return generators_algebra_rational_invariants( L, 
+                                needs_basis_change = needs_basis_change )    
+#-------------
+>>>>>>> debbce76a8ae190dda3237006091cb7893ab0c40
