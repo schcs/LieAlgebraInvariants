@@ -57,7 +57,9 @@ def invariants_zero_jordan_block(gensF):
             fact = fact*j
             if fact == 0:
                 fact = 1
-            a[i-1] = a[i-1] + ((-1)**(j))/(fact)*gensF[0]**(i-1-j)*gensF[1]**j*gensF[i-j]
+            invFact = QQ(1/fact)
+            num = ((-1)**j)*invFact
+            a[i-1] = a[i-1] + num*(gensF[0]**(i-1-j))*(gensF[1]**j)*(gensF[i-j])
         a[i-1] = a[i-1].numerator()
     return a
 #-------------
@@ -209,7 +211,7 @@ def invariants_matrix_derivation(diff):
                         if j != i and dateInv[j][0][k] in QQ and dateInv[j][0][k] != 0:
                             den = dateInv[j][0][k].denominator()
                             num = dateInv[j][0][k]*den
-                            inv = inv + [dateInv[j][1][k]**(den)/dateInv[i][1][0]**(num)]
+                            inv = inv + [(dateInv[j][1][k]**(den))*(dateInv[i][1][0]**(num)).inverse()]
             if dateInv[i][0][0] == -1:
                 inv = inv + invariants_eigenvalue_jordan_block(dateInv[i][1])
                 for j in range(len(dateInv)):
