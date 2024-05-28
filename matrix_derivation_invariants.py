@@ -127,7 +127,7 @@ def invariants_matrix_derivation(diff):
     M = derivation_for_matrix(diff)
     n = M.nrows()
     f = M.characteristic_polynomial()
-    K.<a> = f.splitting_field()
+    K = f.splitting_field("a")
     M = M.base_extend(K)
     J, P = M.jordan_form(transformation=True)
     diff = matrix_for_derivation(M)
