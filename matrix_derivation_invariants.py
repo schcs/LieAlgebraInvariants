@@ -1,3 +1,5 @@
+from sage.rings.number_field.splitting_field import SplittingFieldAbort
+
 #-------------
 def matrix_for_derivation(M):
     K = M.base_ring()
