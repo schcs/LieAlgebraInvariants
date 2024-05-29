@@ -33,7 +33,7 @@ def differential_operator( L, x ):
         P = L.polynomialRing
         F = L.fractionField
     else: 
-        P = PolynomialRing( F, d, L.basis().keys() )
+        P = PolynomialRing( F, d, L.basis().keys().list() )
         F = P.fraction_field()
         L.polynomialRing = P
         L.fractionField = F

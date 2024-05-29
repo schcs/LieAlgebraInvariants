@@ -1,96 +1,85 @@
 from sage.rings.number_field.splitting_field import SplittingFieldAbort
 
 #-------------
-def matrix_for_derivation(M):
+def derivation_of_matrix(M):
     K = M.base_ring()
     n = M.nrows()
-    P = PolynomialRing(K, "x", n)
-    F = P.fraction_field()
+    F = PolynomialRing( K, "x", n ).fraction_field()
     gensF = F.gens()
     D = F.derivation_module()
     bD = D.basis().list()
-    diff = D.zero()
-    for j in range(n):
-        for i in range(n):
-            diff = diff + M[i,j]*gensF[i]*bD[j]
-    return diff
+    
+    return sum( M[i,j]*gensF[i]*bD[j] for i in range( n ) for j in range( n ))
+    
 #-------------
 
 #-------------
-def derivation_for_matrix(diff):
-    diff = diff.extend_to_fraction_field()
-    D = diff.parent()
-    F = D.base()
-    gensF = F.gens()
-    n = len(gensF)
-    P = F.base()
+def matrix_of_derivation(diff):
+
+    P = diff.parent().base()
     gensP = P.gens()
-    M = Matrix(F.base_ring(), n)
-    for i in range(n):
-        pol = P(diff(gensF[i]))
+    n = len(gensP)
+    M = Matrix(P.base_ring(), n)
+    mc = diff.monomial_coefficients()
+    
+    for i in range(n):    
+        pol = mc[i].numerator() if i in mc.keys() else P.zero().numerator()
         mon = pol.monomials()
         coeff = pol.coefficients()
+        mon_coeff_dict = dict( zip( mon, coeff ))
         for j in range(len(mon)):
-            varBool = True
-            cont = 0
-            while varBool:
-                if mon[j] == gensP[cont]:
-                    M[cont,i] = coeff[j]
-                    varBool = False
-                else:
-                    cont = cont + 1
-                if cont == n:
-                    varBool = False
+            cont = gensP.index( mon[j] )
+            M[cont,i] = mon_coeff_dict[mon[j]]
+
     return M
 #-------------
 
 #-------------
-def invariants_zero_jordan_block(gensF):
+
+# the function implements the computation of the invariants given 
+# in Lemma 3.1 of Snobl and Winternitz for the Jordan block with 
+# zero eigenvaliue
+
+def invariants_nilpotent_jordan_block_lemma_3_1(gensF):
     n = len(gensF)
     if n == 1:
         return []
     a = [0]*(n-1)
     a[0] = gensF[0]
-    for i in range(2,n):
+    for k in range(2,n):
         fact = 1
-        for j in range(i+1):
-            fact = fact*j
-            if fact == 0:
-                fact = 1
-            invFact = QQ(1/fact)
-            num = ((-1)**j)*invFact
-            a[i-1] = a[i-1] + num*(gensF[0]**(i-1-j))*(gensF[1]**j)*(gensF[i-j])
-        a[i-1] = a[i-1].numerator()
+        for j in range(k+1):
+            fact = fact*j if j > 0 else 1
+            a[k-1] = a[k-1] + ((-1)**j)*(gensF[0]**(k-1-j))*(gensF[1]**j)*(gensF[k-j])/fact
+        #a[k-1] = a[k-1].numerator()
     return a
 #-------------
 
 #-------------
+
 def invariants_eigenvalue_jordan_block(gensF):
-    v = invariants_zero_jordan_block(gensF)
-    if len(v) == 0:
-        return []
-    a = [0]*(len(v)-1)
-    for i in range(len(a)):
-        a[i] = v[i+1]/v[0]**(i+2)
-    return a
+    
+    v = invariants_nilpotent_jordan_block_lemma_3_1(gensF)
+    return [ v[i+1]/v[0]**(i+2) for i in range(len( v )-1)]
 #-------------
 
 #-------------
 def invariants_diagonal(diag, gensF):
     n = len(diag)
     a = []
-    varBool = True
-    cont = 0
-    while varBool:
+
+    for cont in range( n-1 ):
         for i in range(cont+1,n):
-            if diag[cont]/diag[i] in QQ:
-                quoc = diag[cont]/diag[i]
+            quoc = diag[cont]/diag[i]
+            if quoc in QQ:
                 den = quoc.denominator()
                 num = quoc*den
-                a = a + [(gensF[cont]**(den))*(gensF[i]**(num)).inverse()]
-        cont = cont + 1
-        if len(a) == n-1 or cont == n-1:
-            varBool = False
+                new_inv = (gensF[cont]**(den))/(gensF[i]**(num))
+                if new_inv not in a and (new_inv).inverse() not in a: 
+                   a.append( new_inv )
+
+        if len(a) == n-1:
+            break 
     return a
 #-------------
 
@@ -126,13 +115,13 @@ def invariants_matrix_derivation(diff):
 
     '''
     # Extending the matrix to a field where its Jordan form can be taken
-    M = derivation_for_matrix(diff)
+    M = matrix_of_derivation(diff)
     n = M.nrows()
     f = M.characteristic_polynomial()
     K = f.splitting_field("a")
     M = M.base_extend(K)
     J, P = M.jordan_form(transformation=True)
-    diff = matrix_for_derivation(M)
+    diff = derivation_of_matrix(M)
     D = diff.parent()
     F = D.base()
     gensF = list(F.gens())
@@ -231,6 +220,6 @@ def invariants_matrix_derivation(diff):
                 if len(dateInv[i][1]) == 1:
                     inv = inv + dateInv[i][1]
                 else:
-                    inv = inv + invariants_zero_jordan_block(dateInv[i][1])
+                    inv = inv +  invariants_nilpotent_jordan_block_lemma_3_1(dateInv[i][1])
     return inv
 #-------------
