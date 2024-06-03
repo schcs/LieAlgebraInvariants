@@ -72,8 +72,8 @@ def invariants_diagonal(diag, gensF):
         for i in range(cont+1,n):
             quoc = diag[cont]/diag[i]
             if quoc in QQ:
-                den = quoc.denominator()
-                num = quoc*den
+                den = QQ(quoc.denominator())
+                num = QQ(quoc*den)
                 new_inv = (gensF[cont]**(den))/(gensF[i]**(num))
                 if new_inv not in a and (new_inv).inverse() not in a: 
                    a.append( new_inv )
@@ -177,7 +177,7 @@ def invariants_matrix_derivation(diff):
         for i in range(len(notDiag)):
             gensBlock = []
             for j in range(blocks[notDiag[i]].nrows()):
-                        gensBlock = gensBlock + [gensAlt[acumLenBlocks[notDiag[i]]+j]]
+                gensBlock = gensBlock + [gensAlt[acumLenBlocks[notDiag[i]]+j]]
             dateInv[diagExist+i] = [[blocks[notDiag[i]][0,0]], gensBlock]
     else:
         for i in range(len(notDiag)):
@@ -198,8 +198,8 @@ def invariants_matrix_derivation(diff):
                 for j in range(len(dateInv)):
                     for k in range(len(dateInv[j][0])):
                         if j != i and dateInv[j][0][k] in QQ and dateInv[j][0][k] != 0:
-                            den = dateInv[j][0][k].denominator()
-                            num = dateInv[j][0][k]*den
+                            den = QQ(dateInv[j][0][k].denominator())
+                            num = QQ(dateInv[j][0][k]*den)
                             inv = inv + [(dateInv[j][1][k]**(den))*(dateInv[i][1][0]**(num)).inverse()]
             if dateInv[i][0][0] == -1:
                 inv = inv + invariants_eigenvalue_jordan_block(dateInv[i][1])
@@ -207,14 +207,14 @@ def invariants_matrix_derivation(diff):
                     if len(dateInv[j][0]) != 1:
                         for k in range(len(dateInv[j][0])):
                             if dateInv[j][0][k] in QQ:
-                                den = dateInv[j][0][k].denominator()
-                                num = dateInv[j][0][k]*den
+                                den = QQ(dateInv[j][0][k].denominator())
+                                num = QQ(dateInv[j][0][k]*den)
                                 inv = inv + [(dateInv[j][1][k]**(den))*(dateInv[i][1][0]**(num))]
                     else:
                         for k in range(len(dateInv[j][0])):
                             if j != i and dateInv[j][0][k] in QQ and dateInv[j][0][k] != 0 and dateInv[j][0][k] != 1 and dateInv[j][0][k] != -1:
-                                den = dateInv[j][0][k].denominator()
-                                num = dateInv[j][0][k]*den
+                                den = QQ(dateInv[j][0][k].denominator())
+                                num = QQ(dateInv[j][0][k]*den)
                                 inv = inv + [(dateInv[j][1][k]**(den))*(dateInv[i][1][0]**(num))]
             if dateInv[i][0][0] == 0:
                 if len(dateInv[i][1]) == 1:
