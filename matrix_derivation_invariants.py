@@ -64,23 +64,45 @@ def invariants_eigenvalue_jordan_block(gensF):
 #-------------
 
 #-------------
-def invariants_diagonal(diag, gensF):
-    n = len(diag)
-    a = []
-
-    for cont in range( n-1 ):
-        for i in range(cont+1,n):
-            quoc = diag[cont]/diag[i]
-            if quoc in QQ:
-                den = QQ(quoc.denominator())
-                num = QQ(quoc*den)
-                new_inv = (gensF[cont]**(den))/(gensF[i]**(num))
-                if new_inv not in a and (new_inv).inverse() not in a: 
-                   a.append( new_inv )
-
-        if len(a) == n-1:
-            break 
-    return a
+def invariants_diagonal(diag, gensF, K):
+    len_diag = len(diag)
+    degree_K = K.polynomial().degree()
+    for i in range(len_diag):
+        diag[i] = K(diag[i])
+    coeff = [0]*len_diag
+    for i in range(len_diag):
+        coeff_diag = list(diag[i].polynomial())
+        if len(coeff_diag) < degree_K:
+            for j in range(degree_K-len(coeff_diag)):
+                coeff_diag = coeff_diag + [0]
+        coeff[i] = coeff_diag
+    sist_qq = Matrix(QQ, degree_K, len_diag)
+    for i in range(len_diag):
+        sist_qq[:,i] = vector(coeff[i])
+    for i in range(degree_K):
+        den_line = []
+        for j in range(len_diag):
+            den_line = den_line + [sist_qq[i,j].denominator()]
+        lcm_diag = lcm(den_line)
+        sist_qq[i,:] = sist_qq[i,:]*lcm_diag
+    sist_zz = Matrix(ZZ, degree_K, len_diag)
+    for i in range(degree_K):
+        sist_zz[i,:] = sist_qq[i,:]
+    sol = sist_zz.right_kernel()
+    sol_basis = sol.basis()
+    if len(sol_basis) == 0:
+        return []
+    matrix_sol = Matrix(ZZ,len(sol_basis),len_diag)
+    for i in range(len(sol_basis)):
+        matrix_sol[i,:] = sol_basis[i]
+    matrix_sol_hermite = matrix_sol.hermite_form()
+    inv = []
+    for i in range(len(sol_basis)):
+        inv_comp = 1
+        for j in range(degree_K):
+            inv_comp = inv_comp*gensF[j]**matrix_sol_hermite[i,j]
+        inv = inv + [inv_comp]
+    return inv
 #-------------
 
 #-------------
@@ -119,7 +141,7 @@ def invariants_matrix_derivation(diff):
     n = M.nrows()
     f = M.characteristic_polynomial()
     K = f.splitting_field("a")
-    M = M.base_extend(K)
+    M = Matrix(K,M)
     J, P = M.jordan_form(transformation=True)
     diff = derivation_of_matrix(M)
     D = diff.parent()
@@ -189,7 +211,7 @@ def invariants_matrix_derivation(diff):
     inv = []
     for i in range(len(dateInv)):
         if len(dateInv[i][0]) != 1:
-            inv = inv + invariants_diagonal(dateInv[i][0], dateInv[i][1])
+            inv = inv + invariants_diagonal(dateInv[i][0], dateInv[i][1], K)
         else:
             if dateInv[i][0][0] != 0 and dateInv[i][0][0] != 1 and dateInv[i][0][0] != -1:
                 inv = inv + invariants_eigenvalue_jordan_block(dateInv[i][1])
