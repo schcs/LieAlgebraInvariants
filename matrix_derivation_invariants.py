@@ -99,7 +99,7 @@ def invariants_diagonal(diag, gensF, K):
     inv = []
     for i in range(len(sol_basis)):
         inv_comp = 1
-        for j in range(degree_K):
+        for j in range(len_diag):
             inv_comp = inv_comp*gensF[j]**matrix_sol_hermite[i,j]
         inv = inv + [inv_comp]
     return inv
