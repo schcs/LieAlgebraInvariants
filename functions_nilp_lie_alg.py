@@ -44,7 +44,7 @@ def lie_alg_from_gap_to_sage(l):
 #-------------
 
 #-------------
-def satisfies_jacobi(L):
+def jacobi_satisfies(L):
     '''
         INPUT:
         
@@ -64,7 +64,7 @@ def satisfies_jacobi(L):
 
             sage: L = LieAlgebra(QQ, dicio, names='x0,x1,x2,x3,x4,x5,x6')
 
-            sage: satisfies_jacobi(L)
+            sage: jacobi_satisfies(L)
 
             True
         
@@ -80,81 +80,6 @@ def satisfies_jacobi(L):
                 if a + b + c != 0:
                     return [bL[i], bL[j], bL[k]]
     return True
-#-------------
-
-#-------------
-def special_basis_nilp_lie_alg(L):
-    r'''
-        INPUT:
-        
-            - a nilpotent lie algebra, L.
-            
-        OUTPUT:
-            
-            - a base of the Lie algebra in list format, `{x_{1}, \dots, x_{n}}`, such that for every `x \in L`,
-             
-            .. MATH::
-            
-            [x, x_{i}] = \sum_{j = 1}^{i - 1} \lambda_{j}x_{j}.
-        
-        COMMENT:
-        
-            The base is calculated by the union of the bases of the ideals below.
-
-            .. MATH::
-
-            0 \subseteq I_{1} \subseteq I_{2} \subseteq \cdots \subseteq I_{\ell} = L,
-
-            where `I_{1}` is the center of `L`, Z(L), and `I_{j}` is the ideal of `L` such that
-
-            .. MATH::
-
-            \faktor{I_{j}}{I_{j-1}} = Z(\faktor{L}{I_{j-1}})
-        
-        EXAMPLES:
-        
-            sage: L = nilpotent_lie_algebra(QQ, [6,16], True)
-            
-            sage: special_basis_nilp_lie_alg(L) 
-
-            [x0, x1, x2, x3, x4, x5]
-
-    '''
-    if L.is_nilpotent() == False:
-        return print("Essa álgebra não é nilponte.")
-    baseL = list(L.basis()) # base de L no formato de lista
-    dimL = len(baseL)
-    Z = L.center() # centro de L
-    baseZ = list(Z.basis())
-    dimZ = len(baseZ) 
-    baseLnova = [0]*dimL # base que vamos devolver ao final da computação
-    baseLnovaTrun = [0]*dimZ 
-    for i in range(dimZ):
-        baseLnova[i] = baseZ[i]
-        baseLnovaTrun[i] = baseZ[i]
-    Q = L.quotient(Z) # quociente L/Z
-    ZQ = Q.center() # centro de L/Z
-    baseZQ = list(ZQ.basis()) # base de Z(L/Z)
-    dimZQ = len(baseZQ)
-    preImBaseZQ = [0]*dimZQ
-    for i in range(dimZ, dimZ + dimZQ):
-        baseLnova[i] = Q.lift(baseZQ[i - dimZ]) 
-        preImBaseZQ[i - dimZ] = Q.lift(baseZQ[i - dimZ]) # pré-imagem da base de Z(L/Z)
-    baseLnovaTrun = baseLnovaTrun + preImBaseZQ
-    cont = len(baseLnovaTrun)
-    while cont < dimL:
-        I = L.ideal(baseLnovaTrun)
-        Q = L.quotient(I)
-        ZQ = Q.center()
-        baseZQ = list(ZQ.basis())
-        dimZQ = len(baseZQ)
-        preImBaseZQ = [0]*dimZQ
-        for i in range(cont, cont+dimZQ):
-            baseLnova[i] = Q.lift(baseZQ[i - cont])
-            preImBaseZQ[i - cont] = Q.lift(baseZQ[i - cont])
-        cont = cont + dimZQ
-        baseLnovaTrun = baseLnovaTrun + preImBaseZQ
-    return baseLnova
 #-------------
 
 #-------------
@@ -178,7 +103,7 @@ def coord_base(L, bLdada, x):
         
             sage: L = nilpotent_lie_algebra(QQ, [6,16], True)
 
-            sage: bEspL = special_basis_nilp_lie_alg(L)
+            sage: bEspL = triangular_basis_lie_algebra(L)
 
             sage: x = L.random_element()
 
@@ -239,7 +164,7 @@ def base_change_nilp_lie_alg(L, bL):
         
             sage: L = nilpotent_lie_algebra(QQ, [6,16])
 
-            sage: bEspL = special_basis_nilp_lie_alg(L)
+            sage: bEspL = triangular_basis_lie_algebra(L)
 
             sage: Lesp = base_change_nilp_lie_alg(L, bEspL)
 
@@ -277,7 +202,7 @@ def nilpotent_lie_algebra( F, args, standard_basis = False ):
         
         COMMENT:
         
-            This function uses the gap.NilpotentLieAlgebra function to return a nilpotent Lie algebra in Gap. After that, it uses the lie_alg_from_gap_to_sage function to convert that algebra, written in the Gap language, to an algebra in the Sage language. If the optional value of the function is True, then the function changes the basis of the algebra to the basis given by the special_basis_nilp_lie_alg function.
+            This function uses the gap.NilpotentLieAlgebra function to return a nilpotent Lie algebra in Gap. After that, it uses the lie_alg_from_gap_to_sage function to convert that algebra, written in the Gap language, to an algebra in the Sage language. If the optional value of the function is True, then the function changes the basis of the algebra to the basis given by the triangular_basis_lie_algebra function.
         
         EXAMPLES:
         
@@ -292,7 +217,7 @@ def nilpotent_lie_algebra( F, args, standard_basis = False ):
     if not standard_basis:
         return L
     else:
-        return base_change_nilp_lie_alg( L, special_basis_nilp_lie_alg( L ))
+        return base_change_nilp_lie_alg( L, triangular_basis_lie_algebra( L ))
 #-------------
 
 #-------------
@@ -310,7 +235,7 @@ def solvable_lie_algebra( F, args, standard_basis = False ):
         
         COMMENT:
         
-            This function uses the gap.SolvableLieAlgebra function to return a solvable Lie algebra in Gap. After that, it uses the lie_alg_from_gap_to_sage function to convert that algebra, written in the Gap language, to an algebra in the Sage language. If the optional value of the function is True, then the function changes the basis of the algebra to the basis given by the special_basis_nilp_lie_alg function.
+            This function uses the gap.SolvableLieAlgebra function to return a solvable Lie algebra in Gap. After that, it uses the lie_alg_from_gap_to_sage function to convert that algebra, written in the Gap language, to an algebra in the Sage language. If the optional value of the function is True, then the function changes the basis of the algebra to the basis given by the triangular_basis_lie_algebra function.
         
         EXAMPLES:
         
@@ -323,9 +248,7 @@ def solvable_lie_algebra( F, args, standard_basis = False ):
     '''
     L = lie_alg_from_gap_to_sage( gap.SolvableLieAlgebra( F, args ))
     return L
-    
 #-------------
-
 
 #-------------
 def isomorphic_random_nilp_lie_alg(L):
@@ -359,7 +282,10 @@ def isomorphic_random_nilp_lie_alg(L):
     logAux = True
     while logAux:
         for i in range(dimL):
-            bV[i] = V.random_element()
+            a = [0]*dimL
+            for j in range(dimL):
+                a[j] = ZZ.random_element(-5,5)
+            bV[i] = V(a)
         if V.are_linearly_dependent(bV) == False:
             logAux = False
     for i in range(dimL):
@@ -389,7 +315,7 @@ def structure_constants(L, bLdada):
         
             sage: L = nilpotent_lie_algebra(QQ, [6,16], True)
 
-            sage: bEspL = special_basis_nilp_lie_alg(L)
+            sage: bEspL = triangular_basis_lie_algebra(L)
 
             sage: structure_constants(L, bEspL)
 
@@ -414,58 +340,9 @@ def structure_constants(L, bLdada):
     P = matrix(QQ, dimL)
     for i in range(dimL):
         P[:,i] = vector(coord_base(L, bL, bLdada[i]))
-    Pinv = P.inverse()
-    E = Pinv*M*P
+    Ptrans = P.transpose()
+    E = Ptrans*M*P
     return E
-#-------------
-
-#-------------
-def adjoint_matrix_element(L, x):
-    '''
-        INPUT:
-        
-            - a Lie algebra, L
-            - an element of L, x
-            
-        OUTPUT:
-            
-            - matrix of the adjoint operator of x with respect to the special basis
-        
-        COMMENT:
-        
-            Given a Lie algebra `L` and an element `x` from `L`, this function returns the matrix of the `ad_{x}` operator according to the basis given by the special_basis_nilp_lie_alg function.
-        
-        EXAMPLES:
-        
-            sage: L = nilpotent_lie_algebra(QQ, [6,16], True) 
-
-            sage: bEspL = special_basis_nilp_lie_alg(L)
-
-            sage: x = L.random_element()
-
-            sage: x
-
-            -x5
-
-            sage: adjoint_matrix_element(L,x)
-            [ 0 -1  0  0  0  0]
-            [ 0  0  0  0  0  0]
-            [ 0  0  0  0  0  0]
-            [ 0  0  0  0  1  0]
-            [ 0  0  0  0  0  0]
-            [ 0  0  0  0  0  0]
-        
-    '''
-    bEspL = special_basis_nilp_lie_alg(L)
-    dimL = len(bEspL)
-    M = matrix(QQ, dimL)
-    colchXbase = [0]*dimL
-    for j in range(dimL):
-        colchXbase[j] = L.bracket(x,bEspL[j])
-    for j in range(dimL):
-        for i in range(dimL):
-            M[i, j] = coord_base(L, bEspL, colchXbase[j])[i]
-    return M    
 #-------------
 
 #-------------
@@ -518,9 +395,10 @@ def lie_algebra_strict_upper_triangular_matrices(n):
     #return dict_lie
     L = LieAlgebra(QQ, dict_lie, names = keys)
     return L
+#-------------
 
+#-------------
 # the solvable Lie algebra of upper triangular matrices
-
 def lie_algebra_upper_triangular_matrices( n ):
 
     # the dimension of the algebra 
@@ -568,12 +446,149 @@ def lie_algebra_upper_triangular_matrices( n ):
             
     # return the Lie algebra
     return LieAlgebra(QQ, prod_dict, basis_names )
+#-------------
 
-
+#-------------
 def standard_filiform_lie_algebra( n ):
 
     vars = [ 'y'+str(k) for k in range( n-1 ) ] + ['x']
     rel_dict = { ('x','y'+str(k)): {'y'+str(k-1): 1} for k in range(1,n-1) }
     return LieAlgebra( QQ, rel_dict, vars )
+#-------------
 
+#-------------
+def triangular_basis_nilpotent_lie_algebra(L):
+    r'''
+        INPUT:
+        
+            -
+            
+        OUTPUT:
+            
+            -
+        
+        COMMENT:
+        
+            
+        
+        EXAMPLES:
+        
+            
+
+    '''
+    baseL = list(L.basis()) # base de L no formato de lista
+    dimL = len(baseL)
+    Z = L.center() # centro de L
+    baseZ = list(Z.basis())
+    dimZ = len(baseZ) 
+    baseLnova = [0]*dimL # base que vamos devolver ao final da computação
+    baseLnovaTrun = [0]*dimZ 
+    for i in range(dimZ):
+        baseLnova[i] = baseZ[i]
+        baseLnovaTrun[i] = baseZ[i]
+    Q = L.quotient(Z) # quociente L/Z
+    ZQ = Q.center() # centro de L/Z
+    baseZQ = list(ZQ.basis()) # base de Z(L/Z)
+    dimZQ = len(baseZQ)
+    preImBaseZQ = [0]*dimZQ
+    for i in range(dimZ, dimZ + dimZQ):
+        baseLnova[i] = Q.lift(baseZQ[i - dimZ]) 
+        preImBaseZQ[i - dimZ] = Q.lift(baseZQ[i - dimZ]) # pré-imagem da base de Z(L/Z)
+    baseLnovaTrun = baseLnovaTrun + preImBaseZQ
+    cont = len(baseLnovaTrun)
+    while cont < dimL:
+        I = L.ideal(baseLnovaTrun)
+        Q = L.quotient(I)
+        ZQ = Q.center()
+        baseZQ = list(ZQ.basis())
+        dimZQ = len(baseZQ)
+        preImBaseZQ = [0]*dimZQ
+        for i in range(cont, cont+dimZQ):
+            baseLnova[i] = Q.lift(baseZQ[i - cont])
+            preImBaseZQ[i - cont] = Q.lift(baseZQ[i - cont])
+        cont = cont + dimZQ
+        baseLnovaTrun = baseLnovaTrun + preImBaseZQ
+    return baseLnova
+#-------------
+
+#-------------
+def triangular_basis_solvable_lie_algebra(L):
+    r'''
+        INPUT:
+        
+            -
+            
+        OUTPUT:
+            
+            -
+        
+        COMMENT:
+        
+            
+        
+        EXAMPLES:
+        
+            
+
+    '''
+    dimL = L.dimension()
+    bL = L.basis().list()
+    V = VectorSpace(QQ,dimL)
+    bV = V.basis()
+    serie = L.derived_series()
+    n = len(serie)
+    serieV = [0]*n
+    for i in range(n):
+        bS = serie[i].gens()
+        serieV[i] = V.subspace_with_basis([V(coord_base(L,bL,bS[j])) for j in range(len(bS))])
+    Q = serieV[n-2].quotient(serieV[n-1])
+    bVserie = [V(Q.lift(Q.basis()[i])) for i in range(len(Q.basis()))]
+    aux = n-2
+    while aux !=0:
+        aux = aux - 1
+        Q = serieV[aux].quotient(serieV[aux+1])
+        bVserie = bVserie + [V(Q.lift(Q.basis()[i])) for i in range(len(Q.basis()))]
+    baseTriang = []
+    for i in range(len(bVserie)):
+        a = 0
+        for j in range(dimL):
+            a = a + bVserie[i][j]*bL[j]
+        baseTriang = baseTriang + [a]
+    return baseTriang
+#-------------
+
+#-------------
+def triangular_basis_lie_algebra(L):
+    r'''
+        INPUT:
+        
+            -
+            
+        OUTPUT:
+            
+            -
+        
+        COMMENT:
+        
+            
+        
+        EXAMPLES:
+        
+            
+
+    '''
+    if L.is_nilpotent():
+        return triangular_basis_nilpotent_lie_algebra(L)
+    if L.is_solvable():
+        return triangular_basis_solvable_lie_algebra(L)
+#-------------
+
+#-------------
+def adjoint_matrix_element(L, bL, x):
+    dimL = L.dimension()
+    M = Matrix(QQ,dimL)
+    for j in range(dimL):
+        for i in range(dimL):
+             M[i,j] = M[i,j] + coord_base(L, bL, L.bracket(x,bL[j]))[i]
+    return M
 #-------------

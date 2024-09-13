@@ -1,55 +1,73 @@
+# Converts a list of rational functions to a list of polynomials. 
+#
+# We factorize the denominators and introduce a new variable in the place of 
+# each irreducible factor. 
+
 def rational_functions_to_pols( gens ):    
     
-    primes_of_denoms = []
-    exponents_of_primes_in_denoms = []
-    units = []
+    primes_of_denoms = [] # the primes (irreducibles) appearing in the denominators
+    exponents_of_primes_in_denoms = []  # their exponents 
+    units = [] # this is the list of coefficients
     
     # get the parent pol ring
     P = gens[0].numerator().parent()
-    P = P.change_ring(P.base_ring().fraction_field())
-    P_gens = P.gens()
-    nr_gens = len(gens)
-    n = len(P.gens())
     F = P.base_ring()
+    n = len( P.gens())
+    
+    # make sure that F is field
     if not F.is_field():
         F = F.fraction_field()
+         
+    # is this line needed
+    # P = P.change_ring(P.base_ring().fraction_field())
+    
+    # get the generators 
+    P_gens, nr_gens = P.gens(), len( gens )
 
-
+    # let's build the data
     for g in gens:
         exps = []
-        d = g.denominator()
-        fact = d.factor()
+        fact = g.denominator().factor()
+        # append the constant term in the factorization into units
         units.append( F( fact.unit()))
 
         for f in fact:
+            # check if the factor f[0] has already appeared
             if f[0] in primes_of_denoms:
+                # find its index
+                # can this be done at the same time?
                 ind = primes_of_denoms.index( f[0] )
+                # append the info into exps
                 exps.append( (ind, f[1]) )
             else:
+                # f[0] hasn't yet appeared
                 primes_of_denoms.append( f[0])
+                # append to exps
                 exps.append( (len(primes_of_denoms)-1, f[1] ))
+        # append exps to the list of exponent vectors
         exponents_of_primes_in_denoms.append( exps )    
     
-    
+    # define new polynomial ring
     P1 = PolynomialRing( F, n + len( primes_of_denoms), 'xx' )
     
-    new_gens = []
+    # this will be the list 
+    new_gens = [ P1.zero()]*nr_gens
+    
+    # this is a substitution in which we substitute the gens of P1 into the gens of P
     subs = { P.gens()[k]: P1.gens()[k] for k in range( n )}
-    #return subs
-    for i in range( len( gens )):
-        g = gens[i]
-        #print( g.numerator(), P )
-        g1 = P(g.numerator()).subs( subs )
-        #print( exps )
-        g1 *= (units[i]**-1)*prod( [ (P1.gens()[n+ex[0]])**ex[1] for ex in exponents_of_primes_in_denoms[i] ])
-        new_gens.append( g1 )
 
-    #print( primes_of_denoms )
-    #return primes_of_denoms, subs
+    for i in range( nr_gens ):
+        g = gens[i]
+        # substitute the enumerators
+        g1 = P(g.numerator()).subs( subs )
+        # multiply with the denom
+        g1 *= (units[i]**-1)*prod( [ (P1.gens()[n+ex[0]])**ex[1] for ex in exponents_of_primes_in_denoms[i] ])
+        new_gens[i] = g1
+
     for i in range( len( primes_of_denoms )):
         p = P(primes_of_denoms[i])
         pp = p.subs( subs )
-        new_gens.append( pp*P1.gens()[n+i]-1 )
+        new_gens[nr_gens+i] = pp*P1.gens()[n+i]-1
 
     return new_gens  
 
