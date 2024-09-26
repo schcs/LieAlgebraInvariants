@@ -107,14 +107,10 @@ def desolve_system_alt( rhss, t, func_c, P ):
         for j in range( k+1, nr_eqs ):
             rhss[j] = rhss[j].subs( func_c[k] == sol )
 
-
     return [ P( x ) for x in sols ]
 
 
-
-
 def integral_curves( d_op ):
-
     '''
         INPUT:
 
@@ -204,7 +200,6 @@ def field_isomorphism_from_differential_operator( d ):
     return field_isomorphism_from_curves( curves, F0, domainF )
 
 
-
 def rational_invariant_field( l ):
 
     d = l.dimension()
@@ -242,7 +237,6 @@ def rational_invariant_field( l ):
 
         h  = field_isomorphism_from_differential_operator( dt )
 
-
         substitution = { h.codomain().gens()[i]: gens[i] for i in range( len( gens )) }
 
         gens = [ h(x).subs( substitution ) for x in h.domain().gens() ]
@@ -266,7 +260,6 @@ def rational_invariant_field_2( l ):
         r = m[i]*lcm( x.denominator() for x in m[i] )
         r = ( P(x) for x in r )
 
-
         d = differential_operator_with_coeffs( P, r )
         print( i, d )
         coeffs = [ is_element_of_subalgebra( gens[0:k], d(gens[k]) )[1][0] for k in range( len( gens ))]
@@ -278,7 +271,6 @@ def rational_invariant_field_2( l ):
             continue
 
         h  = field_isomorphism_from_differential_operator( dt )
-
 
         substitution = { h.codomain().gens()[i]: gens[i] for i in range( len( gens )) }
 

@@ -57,7 +57,6 @@ def differential_operator( L, x ):
 
 def differential_operator_from_coeffs( P, coeffs ):
 
-
     D = P.derivation_module()
     op = D.zero()
     
@@ -257,7 +256,7 @@ def method_characteristics_diagonal(d, phi = 0):
 #-------------
 
 #-------------
-def generators_algebra_rational_invariants(L, needs_basis_change = true ):
+def generators_algebra_rational_invariants(L, needs_basis_change=True):
     bL = L.basis().list()
 
     if needs_basis_change:
@@ -314,7 +313,6 @@ def generators_algebra_rational_invariants(L, needs_basis_change = true ):
     for i in range(len(gens_domain_phi)):
         HR[i] = HR[i].subs({P.gens()[k] : y[k] for k in range(dimL)})
     
-    
     L2 = base_change_nilp_lie_alg(L, bL)
     bEspL2 = triangular_basis_lie_algebra(L2)
     xstr1 = [str(i) for i in bEspL]
@@ -336,7 +334,7 @@ def generators_algebra_rational_invariants(L, needs_basis_change = true ):
 #-------------
 
 #-------------
-def invariant_field_isomorphism( L, needs_basis_change = true ):
+def invariant_field_isomorphism( L, needs_basis_change=True):
     return generators_algebra_rational_invariants( L, 
                                 needs_basis_change = needs_basis_change )    
 #-------------
