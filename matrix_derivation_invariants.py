@@ -56,7 +56,6 @@ def invariants_nilpotent_jordan_block_lemma_3_1(gensF):
 #-------------
 
 #-------------
-
 def invariants_eigenvalue_jordan_block(gensF):
     
     v = invariants_nilpotent_jordan_block_lemma_3_1(gensF)
@@ -132,7 +131,7 @@ def invariants_matrix_derivation(diff):
         sage: j8 = jordan_block(1,4)
         sage: j9 = jordan_block(0,3)
         sage: M = block_diagonal_matrix(j1,j4,j5,j6,j7,j8,j2,j3,j9)
-        sage: diff = matrix_for_derivation(M)
+        sage: diff = derivation_of_matrix(M)
         sage: inv = invariants_matrix_derivation(diff)
 
     '''
@@ -177,71 +176,48 @@ def invariants_matrix_derivation(diff):
     acumLenBlocks[0] = 0
     for i in range(1,len(lenBlocks)):
         acumLenBlocks[i] = acumLenBlocks[i-1] + lenBlocks[i-1]
-    # Eigenvalues corresponding to 1 x 1 blocks
-    cont = 0
-    diag = []
-    notDiag = []
-    gensDiag = []
-    for i in range(numBlocks):
-        if blocks[i].nrows() == 1 and blocks[i][0] != 0:
-            diag = diag + [blocks[i].list()[0]]
-            gensDiag = gensDiag + [gensAlt[cont]]
-        else:
-            notDiag = notDiag + [i]
-        cont = cont + blocks[i].nrows()
-    diagExist = 0
-    if len(diag) != 0:
-        diagExist = 1
     # List with the data used to calculate the invariants. Each position of this list is another list with 2 components: the first one, with the eigenvalue; the second one, with the variables corresponding to its block in Jordan form
-    dateInv = [0]*(len(notDiag)+diagExist)
-    if diagExist != 0:
-        dateInv[0] = [diag, gensDiag]
-        for i in range(len(notDiag)):
-            gensBlock = []
-            for j in range(blocks[notDiag[i]].nrows()):
-                gensBlock = gensBlock + [gensAlt[acumLenBlocks[notDiag[i]]+j]]
-            dateInv[diagExist+i] = [[blocks[notDiag[i]][0,0]], gensBlock]
-    else:
-        for i in range(len(notDiag)):
-            gensBlock = []
-            for j in range(blocks[notDiag[i]].nrows()):
-                        gensBlock = gensBlock + [gensAlt[acumLenBlocks[i]+j]]
-            dateInv[i] = [[blocks[notDiag[i]][0,0]], gensBlock]
+    dateInv = [0]*(numBlocks)
+    for i in range(len(dateInv)):
+        gensBlock = []
+        for j in range(blocks[i].nrows()):
+            gensBlock = gensBlock + [gensAlt[acumLenBlocks[i]+j]]
+        dateInv[i] = [[blocks[i][0,0]], gensBlock]
+    # Interaction between blocks
+    diag = [] # first entries of each block (except the nilpotent one of size 1)
+    gensDiag = [] # variables of diag
+    blockNil = [] # position in dateInv at which there is a nilpotent block with size greater than 1
+    blockNotNil = [] # position in dateInv at which there is a non-nilpotent block with size greater than 1
+    for i in range(len(dateInv)):
+        if dateInv[i][0][0] != 0:
+            diag = diag + [dateInv[i][0][0]]
+            gensDiag = gensDiag + [dateInv[i][1][0]]
+            if len(dateInv[i][1]) != 1:
+                blockNotNil = blockNotNil + [i]
+        else:
+            if len(dateInv[i][1]) == 1:
+                diag = diag + [dateInv[i][0][0]]
+                gensDiag = gensDiag + [dateInv[i][1][0]]
+            else:
+                blockNil = blockNil + [i]
     # Calculation of the invariants
     inv = []
     for i in range(len(dateInv)):
-        if len(dateInv[i][0]) != 1:
-            inv = inv + invariants_diagonal(dateInv[i][0], dateInv[i][1], K)
-        else:
-            if dateInv[i][0][0] != 0 and dateInv[i][0][0] != 1 and dateInv[i][0][0] != -1:
-                inv = inv + invariants_eigenvalue_jordan_block(dateInv[i][1])
-            if dateInv[i][0][0] == 1:
-                inv = inv + invariants_eigenvalue_jordan_block(dateInv[i][1])
-                for j in range(len(dateInv)):
-                    for k in range(len(dateInv[j][0])):
-                        if j != i and dateInv[j][0][k] in QQ and dateInv[j][0][k] != 0:
-                            den = QQ(dateInv[j][0][k].denominator())
-                            num = QQ(dateInv[j][0][k]*den)
-                            inv = inv + [(dateInv[j][1][k]**(den))*(dateInv[i][1][0]**(num)).inverse()]
-            if dateInv[i][0][0] == -1:
-                inv = inv + invariants_eigenvalue_jordan_block(dateInv[i][1])
-                for j in range(len(dateInv)):
-                    if len(dateInv[j][0]) != 1:
-                        for k in range(len(dateInv[j][0])):
-                            if dateInv[j][0][k] in QQ:
-                                den = QQ(dateInv[j][0][k].denominator())
-                                num = QQ(dateInv[j][0][k]*den)
-                                inv = inv + [(dateInv[j][1][k]**(den))*(dateInv[i][1][0]**(num))]
-                    else:
-                        for k in range(len(dateInv[j][0])):
-                            if j != i and dateInv[j][0][k] in QQ and dateInv[j][0][k] != 0 and dateInv[j][0][k] != 1 and dateInv[j][0][k] != -1:
-                                den = QQ(dateInv[j][0][k].denominator())
-                                num = QQ(dateInv[j][0][k]*den)
-                                inv = inv + [(dateInv[j][1][k]**(den))*(dateInv[i][1][0]**(num))]
+        if len(dateInv[i][1]) != 1:
             if dateInv[i][0][0] == 0:
-                if len(dateInv[i][1]) == 1:
-                    inv = inv + dateInv[i][1]
-                else:
-                    inv = inv +  invariants_nilpotent_jordan_block_lemma_3_1(dateInv[i][1])
+                inv = inv +  invariants_nilpotent_jordan_block_lemma_3_1(dateInv[i][1])
+            else:
+                inv = inv + invariants_eigenvalue_jordan_block(dateInv[i][1])
+    if len(diag) > 1:
+        inv = inv + invariants_diagonal(diag, gensDiag, K)
+    if len(blockNotNil) == 0:
+        if len(blockNil) > 1:
+            for i in range(1,len(blockNil)):
+                inv = inv + [dateInv[blockNil[0]][1][1]/dateInv[blockNil[0]][1][0] - dateInv[blockNil[i]][1][1]/dateInv[blockNil[i]][1][0]]
+    else:
+        for j in range(len(blockNil)):
+            inv = inv + [dateInv[blockNotNil[0]][1][1]/dateInv[blockNotNil[0]][1][0] - dateInv[blockNil[j]][1][1]/dateInv[blockNil[j]][1][0]]
+        for i in range(1,len(blockNotNil)):
+            inv = inv + [dateInv[blockNotNil[i]][1][1]/dateInv[blockNotNil[i]][1][0] - dateInv[blockNil[0]][1][1]/dateInv[blockNil[0]][1][0]]
     return inv
 #-------------
