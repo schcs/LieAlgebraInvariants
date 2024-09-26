@@ -42,14 +42,11 @@ def equations_from_differential_operator( d_op ):
 
             The equations are returned as symbolic expressions.
 
-        EXAMPLES:
+        EXAMPLES::
 
             sage: l = solvable_lie_algebra( QQ, [4,2,1] )
-
-            sage: d = differential_operator( l, l.3 );
-
+            sage: d = differential_operator( l, l.3 )
             sage: equations_from_differential_operator( d )
-
             ([diff(c0(t), t) == c0(t),
               diff(c1(t), t) == c1(t),
               diff(c2(t), t) == c2(t),

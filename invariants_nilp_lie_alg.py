@@ -3,11 +3,11 @@ def differential_operator( L, x ):
     r'''
         INPUT:
         
-            - 
+        - 
             
         OUTPUT:
             
-            - 
+        - 
             
         COMMENT:
 
@@ -18,7 +18,7 @@ def differential_operator( L, x ):
        
         .. MATH:: 
        
-        \sum_{i=1}^{\dim L} [x,x_i]d_{x_1}
+            \sum_{i=1}^{\dim L} [x,x_i]d_{x_1}
 
         EXAMPLES:
 
