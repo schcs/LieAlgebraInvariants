@@ -208,7 +208,7 @@ def invariants_matrix_derivation(diff):
                 inv = inv +  invariants_nilpotent_jordan_block_lemma_3_1(dateInv[i][1])
             else:
                 inv = inv + invariants_eigenvalue_jordan_block(dateInv[i][1])
-    if len(diag) > 1:
+    if len(diag) >= 1:
         inv = inv + invariants_diagonal(diag, gensDiag, K)
     if len(blockNotNil) == 0:
         if len(blockNil) > 1:
