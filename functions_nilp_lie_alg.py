@@ -120,6 +120,7 @@ def coord_base(L, bLdada, x):
     dimL = len(bLdada)
     coordParbLdada = [0]*dimL
     coordbLdada = [[0]*dimL for i in range(dimL)]
+    F = L.base()
     for i in range(dimL):
         coordParbLdada[i] = [list(j) for j in bLdada[i]]
     for i in range(dimL):
@@ -136,10 +137,10 @@ def coord_base(L, bLdada, x):
             if bLstr[j] == coordParx[i][0]:
                 coordx[j] = coordParx[i][1]
                 j = len(bLdada)
-    V = VectorSpace(QQ, dimL)
-    bLdadaVec = [vector(QQ, coordbLdada[i]) for i in range(dimL)]
+    V = VectorSpace(F, dimL)
+    bLdadaVec = [vector(F, coordbLdada[i]) for i in range(dimL)]
     W = V.subspace_with_basis(bLdadaVec)
-    xvec = vector(QQ, coordx)
+    xvec = vector(F, coordx)
     coord = W.coordinates(xvec)
     return coord
 #-------------
@@ -170,7 +171,8 @@ def base_change_nilp_lie_alg(L, bL):
 
     '''
     dimL = len(bL)
-    P = PolynomialRing(QQ, dimL, "x")
+    F = L.base()
+    P = PolynomialRing(F, dimL, "x")
     x = list(P.gens())
     xstr = [str(i) for i in x] # ['x0', ..., 'xn']
     var = ', '.join(str(i) for i in x) # 'x0, ..., xn'
@@ -183,7 +185,7 @@ def base_change_nilp_lie_alg(L, bL):
             for k in range(dimL):
                 dicioAux[xstr[k]] = v[k]
             dicio[(xstr[i], xstr[j])] = dicioAux
-    LnovaBase = LieAlgebra(QQ, dicio, names = var)
+    LnovaBase = LieAlgebra(F, dicio, names = var)
     return LnovaBase
 #-------------
 
@@ -329,7 +331,8 @@ def structure_constants(L, bLdada):
     '''
     bL = list(L.basis())
     dimL = len(bL)
-    R = PolynomialRing(QQ, dimL, L.basis().keys().list())
+    F = L.base()
+    R = PolynomialRing(F, dimL, L.basis().keys().list())
     FracR = FractionField(R)
     x = R.gens()
     M = matrix(FracR, dimL)
@@ -337,7 +340,7 @@ def structure_constants(L, bLdada):
         for i in range(dimL):
             for k in range(dimL):
                 M[i,j] = M[i,j] + coord_base(L, bL, L.bracket(bL[j],bL[i]))[k]*x[k]
-    P = matrix(QQ, dimL)
+    P = matrix(F, dimL)
     for i in range(dimL):
         P[:,i] = vector(coord_base(L, bL, bLdada[i]))
     Ptrans = P.transpose()
