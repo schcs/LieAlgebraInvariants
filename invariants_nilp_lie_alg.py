@@ -168,6 +168,7 @@ def method_characteristics_nilpotent(d, phi = 0):
         f = d(gens[i])
         f.reduce()
         pols[i] = f
+    print(pols)
     if pols[0] != 0:
         return False
     first_not_zero = 0
@@ -193,6 +194,7 @@ def method_characteristics_nilpotent(d, phi = 0):
     curve[first_not_zero] = pols[first_not_zero]*t
     q = gens[first_not_zero]/pols[first_not_zero]
     for i in range(first_not_zero + 1, len_gens):
+        print(i)
         if pols[i] == 0:
             curve[i] = gens[i]
             inicial_value[i-1] = curve[i]
