@@ -67,7 +67,7 @@ def rational_functions_to_pols( gens ):
     for i in range( len( primes_of_denoms )):
         p = P(primes_of_denoms[i])
         pp = p.subs( subs )
-        new_gens[nr_gens+i] = pp*P1.gens()[n+i]-1
+        new_gens.append( pp*P1.gens()[n+i]-1 )
 
     return new_gens  
 
@@ -111,11 +111,13 @@ def alg_dependence( gens ):
     rgens = R.gens()
 
     rxgens, rzgens = rgens[0:n], rgens[n:n+nr_gens]
+    print( rxgens, rzgens )
     idgens = [ gens[i].subs( { P_gens[j]: rxgens[j] for j in range(n)}) - 
                         rzgens[i] for i in range( nr_gens )]
 
     I = R.ideal( idgens )
     gr = I.groebner_basis()
+    return gr
     
     n_zeros = tuple( 0 for _ in range( n ))
     #return gr, n, n_zeros
