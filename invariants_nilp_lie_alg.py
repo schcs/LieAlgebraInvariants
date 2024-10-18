@@ -168,7 +168,6 @@ def method_characteristics_nilpotent(d, phi = 0):
         f = d(gens[i])
         f.reduce()
         pols[i] = f
-    print(pols)
     if pols[0] != 0:
         return False
     first_not_zero = 0
@@ -194,7 +193,6 @@ def method_characteristics_nilpotent(d, phi = 0):
     curve[first_not_zero] = pols[first_not_zero]*t
     q = gens[first_not_zero]/pols[first_not_zero]
     for i in range(first_not_zero + 1, len_gens):
-        print(i)
         if pols[i] == 0:
             curve[i] = gens[i]
             inicial_value[i-1] = curve[i]
@@ -202,11 +200,11 @@ def method_characteristics_nilpotent(d, phi = 0):
             list_pols = [0]*i
             for j in range(i):
                 list_pols[j] = gens[j]
-            print( "gens are ", list_pols, "pol is", pols[i] )
             is_el = is_element_of_subalgebra(list_pols,pols[i])
             if is_el[0] == False:
                 return False
             aux_c = is_el[1][0]
+
             der_aux_c = P(aux_c.subs({aux_c.parent().gens()[j] : curve[j] for j in range(i)}))
             curve_without_const = polynomial_integral(der_aux_c)
             inicial_value[i-1] = gens[i] - curve_without_const.subs({t:q})
@@ -292,7 +290,6 @@ def generators_algebra_rational_invariants(L, needs_basis_change=True):
         return False
     for i in range(first_not_center+1, dimL):
         d = differential_operator(Lesp, bEspLesp[i])
-        print( i, d )
         #phi0 = phi
         phi = method_characteristics_nilpotent(d, phi)
         #print( "succeed", d )
