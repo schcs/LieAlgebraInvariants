@@ -146,7 +146,7 @@ def coord_base(L, bLdada, x):
 #-------------
 
 #-------------
-def base_change_nilp_lie_alg(L, bL):
+def base_change_lie_algebra(L, bL):
     '''
         INPUT:
         
@@ -167,7 +167,7 @@ def base_change_nilp_lie_alg(L, bL):
 
             sage: bEspL = triangular_basis_lie_algebra(L)
 
-            sage: Lesp = base_change_nilp_lie_alg(L, bEspL)
+            sage: Lesp = base_change_lie_algebra(L, bEspL)
 
     '''
     dimL = len(bL)
@@ -190,7 +190,7 @@ def base_change_nilp_lie_alg(L, bL):
 #-------------
 
 #-------------
-def nilpotent_lie_algebra( F, args, standard_basis = False ):
+def nilpotent_lie_algebra2( F, args, standard_basis = False ):
     '''
         INPUT:
         
@@ -219,11 +219,11 @@ def nilpotent_lie_algebra( F, args, standard_basis = False ):
     if not standard_basis:
         return L
     else:
-        return base_change_nilp_lie_alg( L, triangular_basis_lie_algebra( L ))
+        return base_change_lie_algebra( L, triangular_basis_lie_algebra( L ))
 #-------------
 
 #-------------
-def solvable_lie_algebra( F, args, standard_basis = False ):
+def solvable_lie_algebra2( F, args, standard_basis = False ):
     '''
         INPUT:
         
@@ -293,7 +293,7 @@ def isomorphic_random_nilp_lie_alg(L):
     for i in range(dimL):
         for j in range(dimL):
             bLnova[i] = bLnova[i] + bV[i][j]*bL[j]
-    LnovaBase = base_change_nilp_lie_alg(L, bLnova)
+    LnovaBase = base_change_lie_algebra(L, bLnova)
     return LnovaBase
 #-------------
 

@@ -51,7 +51,9 @@ def print_solvable():
     for i in range(len(list_solv)):
         print("Parâmentro")
         print(list_solv[i],"\n")
-        L = solvable_lie_algebra(QQ,list_solv[i])
+        l = solvable_lie_algebra(QQ,list_solv[i])
+        btri = triangular_basis_solvable_lie_algebra(l)
+        L = base_change_lie_algebra(l, btri)
         print("Matrizes")
         mat = matrices_associated_with_base(L)
         sys.displayhook(mat)
@@ -87,16 +89,4 @@ def print_solvable():
             sol = invariants_matrix_derivation(diff)
             sys.displayhook(sol)
         print("------------\n")
-#-------------
-
-#-------------
-def nilpotent_dim_seis_dezenove():
-    P = PolynomialRing(QQ, 1, "e")
-    e = list(P.gens())
-    F = FractionField(P)
-    d = {('x0','x1'): {'x3':1}, ('x0','x2'): {'x4':1}, ('x1','x3'): {'x5':1}, ('x2','x4'): {'x5':e}}
-    L = LieAlgebra(F, d, names='x0,x1,x2,x3,x4,x5')
-    bTL = triangular_basis_nilpotent_lie_algebra(L)
-    l_iso = base_change_nilp_lie_alg(L, bTL)
-    return l_iso
 #-------------

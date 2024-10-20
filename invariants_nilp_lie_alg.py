@@ -264,7 +264,7 @@ def generators_algebra_rational_invariants(L, needs_basis_change = true ):
 
     if needs_basis_change:
         bEspL = triangular_basis_lie_algebra(L)
-        Lesp = base_change_nilp_lie_alg(L, bEspL)
+        Lesp = base_change_lie_algebra(L, bEspL)
     else:
         bEspL = L.basis().list()
         Lesp = L 
@@ -317,7 +317,7 @@ def generators_algebra_rational_invariants(L, needs_basis_change = true ):
         HR[i] = HR[i].subs({P.gens()[k] : y[k] for k in range(dimL)})
     
     
-    L2 = base_change_nilp_lie_alg(L, bL)
+    L2 = base_change_lie_algebra(L, bL)
     bEspL2 = triangular_basis_lie_algebra(L2)
     xstr1 = [str(i) for i in bEspL]
     xstr2 = [str(i) for i in bEspL2]
