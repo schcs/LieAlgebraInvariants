@@ -1,4 +1,5 @@
-from sage.rings.number_field.splitting_field import SplittingFieldAbort
+from sage.all import ZZ, Matrix, QQ, lcm, PolynomialRing, vector
+# from sage.rings.number_field.splitting_field import SplittingFieldAbort
 
 #-------------
 def derivation_of_matrix(M):
@@ -8,9 +9,9 @@ def derivation_of_matrix(M):
     gensF = F.gens()
     D = F.derivation_module()
     bD = D.basis().list()
-    
+
     return sum( M[i,j]*gensF[i]*bD[j] for i in range( n ) for j in range( n ))
-    
+
 #-------------
 
 #-------------
@@ -21,8 +22,8 @@ def matrix_of_derivation(diff):
     n = len(gensP)
     M = Matrix(P.base_ring(), n)
     mc = diff.monomial_coefficients()
-    
-    for i in range(n):    
+
+    for i in range(n):
         pol = mc[i].numerator() if i in mc.keys() else P.zero().numerator()
         mon = pol.monomials()
         coeff = pol.coefficients()
@@ -36,8 +37,8 @@ def matrix_of_derivation(diff):
 
 #-------------
 
-# the function implements the computation of the invariants given 
-# in Lemma 3.1 of Snobl and Winternitz for the Jordan block with 
+# the function implements the computation of the invariants given
+# in Lemma 3.1 of Snobl and Winternitz for the Jordan block with
 # zero eigenvaliue
 
 def invariants_nilpotent_jordan_block_lemma_3_1(gensF):
@@ -57,7 +58,7 @@ def invariants_nilpotent_jordan_block_lemma_3_1(gensF):
 
 #-------------
 def invariants_eigenvalue_jordan_block(gensF):
-    
+
     v = invariants_nilpotent_jordan_block_lemma_3_1(gensF)
     return [ v[i+1]/v[0]**(i+2) for i in range(len( v )-1)]
 #-------------
@@ -131,13 +132,13 @@ def extension_field_roots(f):
 def invariants_matrix_derivation(diff):
     r'''
         INPUT:
-        
+
             - Derivation over a field of fractions defined from a matrix.
-            
+
         OUTPUT:
-            
+
             - List of algebraically independent generators of the rational invariant algebra of the derivation.
-            
+
         COMMENT:
 
         Given a square matrix M of size n x n, we can define a derivation D_{M} in the polynomial algebra in the variables x_{1}, \cdots, x_{n}, by setting D_{M} = \sum_{j=1}^{n}\sum_{i=1}^{n}D_{M}[i,j]D_{x_{i}}. From the Jordan matrix of D_{M}​, we determine the invariants of the rational function algebra of D_{M}​.
@@ -160,16 +161,20 @@ def invariants_matrix_derivation(diff):
     '''
     # Extending the matrix to a field where its Jordan form can be taken
     M = matrix_of_derivation(diff)
-    n = M.nrows()
     f = M.characteristic_polynomial()
+<<<<<<< HEAD
     K = extension_field_roots(f)
     #K = f.splitting_field('a')
     M = Matrix(K,M)
+=======
+    K = f.splitting_field("a")
+    M = M.change_ring(K)
+>>>>>>> c07ebd5eac74f74264a898558a160bca86635ec3
     J, P = M.jordan_form(transformation=True)
     diff = derivation_of_matrix(M)
     D = diff.parent()
     F = D.base()
-    gensF = list(F.gens())
+    gensF = F.gens()
     # Change of basis
     gensAlt = [0]*len(gensF)
     for j in range(len(gensF)):
@@ -179,7 +184,7 @@ def invariants_matrix_derivation(diff):
     eigenVR = [J[k][k] for k in range(J.nrows())]
     eigenV = [eigenVR[0]]
     cont = 0
-    for i in range(1,len(eigenVR)):
+    for i in range(1, len(eigenVR)):
         if eigenVR[i] != eigenV[cont]:
             eigenV = eigenV + [eigenVR[i]]
             cont = cont + 1

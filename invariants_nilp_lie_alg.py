@@ -3,11 +3,11 @@ def differential_operator( L, x ):
     r'''
         INPUT:
         
-            - 
+        - 
             
         OUTPUT:
             
-            - 
+        - 
             
         COMMENT:
 
@@ -18,7 +18,7 @@ def differential_operator( L, x ):
        
         .. MATH:: 
        
-        \sum_{i=1}^{\dim L} [x,x_i]d_{x_1}
+            \sum_{i=1}^{\dim L} [x,x_i]d_{x_1}
 
         EXAMPLES:
 
@@ -33,7 +33,7 @@ def differential_operator( L, x ):
         P = L.polynomialRing
         F = L.fractionField
     else: 
-        P = PolynomialRing( F, d, L.basis().keys().list() )
+        P = PolynomialRing( F, d, list(L.basis().keys()) )
         F = P.fraction_field()
         L.polynomialRing = P
         L.fractionField = F
@@ -56,7 +56,6 @@ def differential_operator( L, x ):
 #-------------
 
 def differential_operator_from_coeffs( P, coeffs ):
-
 
     D = P.derivation_module()
     op = D.zero()
@@ -259,7 +258,7 @@ def method_characteristics_diagonal(d, phi = 0):
 #-------------
 
 #-------------
-def generators_algebra_rational_invariants(L, needs_basis_change = true ):
+def generators_algebra_rational_invariants(L, needs_basis_change=True):
     bL = L.basis().list()
 
     if needs_basis_change:
@@ -273,7 +272,7 @@ def generators_algebra_rational_invariants(L, needs_basis_change = true ):
     bEspLesp = Lesp.basis().list()
     dimL = len(bL)
     F = Lesp.base_ring()
-    P = PolynomialRing( F, dimL, Lesp.basis().keys().list() )
+    P = PolynomialRing( F, dimL, list(Lesp.basis().keys()) )
     Lesp.polynomialRing = P
     Lesp.fractionField = P.fraction_field()
     x = Lesp.polynomialRing.gens()
@@ -331,14 +330,14 @@ def generators_algebra_rational_invariants(L, needs_basis_change = true ):
     for i in range(len(gens_domain_phi)):
         HR[i] = phi(HR[i])
     
-    P3 = PolynomialRing( F, dimL, L.basis().keys().list() )
+    P3 = PolynomialRing( F, dimL, list(L.basis().keys()))
     HomFracSR = Hom(FracS,FractionField(P3))
     alpha = HomFracSR(HR)
     return [alpha(alpha.domain().gens()[i]) for i in range(len(alpha.domain().gens()))]
 #-------------
 
 #-------------
-def invariant_field_isomorphism( L, needs_basis_change = true ):
+def invariant_field_isomorphism( L, needs_basis_change=True):
     return generators_algebra_rational_invariants( L, 
                                 needs_basis_change = needs_basis_change )    
 #-------------
