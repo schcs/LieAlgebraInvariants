@@ -344,11 +344,13 @@ def nilpotent_6_18(F, trian = False):
 
 #-------------
 def nilpotent_6_19(F, trian = False):
-    P = PolynomialRing(F, 1, "e")
-    e = list(P.gens())[0]
-    FP = FractionField(P)
-    d = {('x0','x1'): {'x3':1}, ('x0','x2'): {'x4':1}, ('x0','x4'): {'x5':1}, ('x1','x3'): {'x5':1}, ('x2','x4'): {'x5':e}}
-    L = LieAlgebra(FP, d, names='x0, x1, x2, x3, x4, x5')
+    P = PolynomialRing(F, "t")
+    t = list(P.gens())[0]
+    f = t**2 + 1
+    K = NumberField(f, 'a')
+    a = list(K.gens())[0]
+    d = {('x0','x1'): {'x3':1}, ('x0','x2'): {'x4':1}, ('x0','x4'): {'x5':1}, ('x1','x3'): {'x5':1}, ('x2','x4'): {'x5':a}}
+    L = LieAlgebra(K, d, names='x0, x1, x2, x3, x4, x5')
     if trian == True:
         bTL = triangular_basis_nilpotent_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)
@@ -369,11 +371,13 @@ def nilpotent_6_20(F, trian = False):
 
 #-------------
 def nilpotent_6_21(F, trian = False):
-    P = PolynomialRing(F, 1, "e")
-    e = list(P.gens())[0]
-    FP = FractionField(P)
-    d = {('x0','x1'): {'x2':1}, ('x0','x2'): {'x3':1}, ('x1','x2'): {'x4':1}, ('x0','x3'): {'x5':1}, ('x1','x4'): {'x5':e}}
-    L = LieAlgebra(FP, d, names='x0, x1, x2, x3, x4, x5')
+    P = PolynomialRing(F, "t")
+    t = list(P.gens())[0]
+    f = t**2 + 1
+    K = NumberField(f, 'a')
+    a = list(K.gens())[0]
+    d = {('x0','x1'): {'x2':1}, ('x0','x2'): {'x3':1}, ('x1','x2'): {'x4':1}, ('x0','x3'): {'x5':1}, ('x1','x4'): {'x5':a}}
+    L = LieAlgebra(K, d, names='x0, x1, x2, x3, x4, x5')
     if trian == True:
         bTL = triangular_basis_nilpotent_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)
@@ -383,11 +387,13 @@ def nilpotent_6_21(F, trian = False):
 
 #-------------
 def nilpotent_6_22(F, trian = False):
-    P = PolynomialRing(F, 1, "e")
-    e = list(P.gens())[0]
-    FP = FractionField(P)
-    d = {('x0','x1'): {'x4':1}, ('x0','x2'): {'x5':1}, ('x1','x3'): {'x5':e}, ('x2','x3'): {'x4':1}}
-    L = LieAlgebra(F, d, names='x0, x1, x2, x3, x4, x5')
+    P = PolynomialRing(F, "t")
+    t = list(P.gens())[0]
+    f = t**2 + 1
+    K = NumberField(f, 'a')
+    a = list(K.gens())[0]
+    d = {('x0','x1'): {'x4':1}, ('x0','x2'): {'x5':1}, ('x1','x3'): {'x5':a}, ('x2','x3'): {'x4':1}}
+    L = LieAlgebra(K, d, names='x0, x1, x2, x3, x4, x5')
     if trian == True:
         bTL = triangular_basis_nilpotent_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)
@@ -408,11 +414,13 @@ def nilpotent_6_23(F, trian = False):
 
 #-------------
 def nilpotent_6_24(F, trian = False):
-    P = PolynomialRing(F, 1, "e")
-    e = list(P.gens())[0]
-    FP = FractionField(P)
-    d = {('x0','x1'): {'x2':1}, ('x0','x2'): {'x4':1}, ('x0','x3'): {'x5':e}, ('x1','x2'): {'x5':1}, ('x1','x3'): {'x4':1}}
-    L = LieAlgebra(F, d, names='x0, x1, x2, x3, x4, x5')
+    P = PolynomialRing(F, "t")
+    t = list(P.gens())[0]
+    f = t**2 + 1
+    K = NumberField(f, 'a')
+    a = list(K.gens())[0]
+    d = {('x0','x1'): {'x2':1}, ('x0','x2'): {'x4':1}, ('x0','x3'): {'x5':a}, ('x1','x2'): {'x5':1}, ('x1','x3'): {'x4':1}}
+    L = LieAlgebra(K, d, names='x0, x1, x2, x3, x4, x5')
     if trian == True:
         bTL = triangular_basis_nilpotent_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)

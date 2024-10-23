@@ -40,11 +40,13 @@ def solvable_3_2(F, trian = False):
 
 #-------------
 def solvable_3_3(F, trian = False):
-    P = PolynomialRing(F, 1, "e")
-    e = list(P.gens())[0]
-    FP = FractionField(P)
-    d = {('x0','x2'): {'x1':-1}, ('x1','x2'): {'x0':-e, 'x1':-1}}
-    L = LieAlgebra(FP, d, names='x0, x1, x2')
+    P = PolynomialRing(F, "t")
+    t = list(P.gens())[0]
+    f = t**2 + 1
+    K = NumberField(f, 'a')
+    a = list(K.gens())[0]
+    d = {('x0','x2'): {'x1':-1}, ('x1','x2'): {'x0':-a, 'x1':-1}}
+    L = LieAlgebra(K, d, names='x0, x1, x2')
     if trian == True:
         bTL = triangular_basis_solvable_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)
@@ -54,11 +56,13 @@ def solvable_3_3(F, trian = False):
 
 #-------------
 def solvable_3_4(F, trian = False):
-    P = PolynomialRing(F, 1, "e")
-    e = list(P.gens())[0]
-    FP = FractionField(P)
-    d = {('x0','x2'): {'x1':-1}, ('x1','x2'): {'x0':-e}}
-    L = LieAlgebra(FP, d, names='x0, x1, x2')
+    P = PolynomialRing(F, "t")
+    t = list(P.gens())[0]
+    f = t**2 + 1
+    K = NumberField(f, 'a')
+    a = list(K.gens())[0]
+    d = {('x0','x2'): {'x1':-1}, ('x1','x2'): {'x0':-a}}
+    L = LieAlgebra(K, d, names='x0, x1, x2')
     if trian == True:
         bTL = triangular_basis_solvable_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)
@@ -85,11 +89,13 @@ def solvable_4_2(F, trian = False):
 
 #-------------
 def solvable_4_3(F, trian = False):
-    P = PolynomialRing(F, 1, "e")
-    e = list(P.gens())[0]
-    FP = FractionField(P)
-    d = {('x0','x3'): {'x0':-1}, ('x1','x3'): {'x2':-1}, ('x2','x3'): {'x1':e, 'x2':-e-1}}
-    L = LieAlgebra(FP, d, names='x0, x1, x2, x3')
+    P = PolynomialRing(F, "t")
+    t = list(P.gens())[0]
+    f = t**2 + 1
+    K = NumberField(f, 'a')
+    a = list(K.gens())[0]
+    d = {('x0','x3'): {'x0':-1}, ('x1','x3'): {'x2':-1}, ('x2','x3'): {'x1':a, 'x2':-a-1}}
+    L = LieAlgebra(K, d, names='x0, x1, x2, x3')
     if trian == True:
         bTL = triangular_basis_solvable_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)
@@ -121,12 +127,18 @@ def solvable_4_5(F, trian = False):
 
 #-------------
 def solvable_4_6(F, trian = False):
-    P = PolynomialRing(F, 2, "e1, e2")
-    e1 = list(P.gens())[0]
-    e2 = list(P.gens())[1]
-    FP = FractionField(P)
-    d = {('x0','x3'): {'x1':-1}, ('x1','x3'): {'x2':-1}, ('x2','x3'): {'x0':-e1, 'x1':-e2, 'x2':-1}}
-    L = LieAlgebra(FP, d, names='x0, x1, x2, x3')
+    P1 = PolynomialRing(F, "t1")
+    t1 = list(P1.gens())[0]
+    f1 = t1**2 - 2
+    K1 = NumberField(f1, 'a1')
+    a1 = list(K1.gens())[0]
+    P2 = PolynomialRing(K1, "t2")
+    t2 = list(P2.gens())[0]
+    f2 = t2**2 + 1
+    K2 = NumberField(f2, 'a2')
+    a2 = list(K2.gens())[0]
+    d = {('x0','x3'): {'x1':-1}, ('x1','x3'): {'x2':-1}, ('x2','x3'): {'x0':-a1, 'x1':-a2, 'x2':-1}}
+    L = LieAlgebra(K2, d, names='x0, x1, x2, x3')
     if trian == True:
         bTL = triangular_basis_solvable_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)
@@ -136,12 +148,18 @@ def solvable_4_6(F, trian = False):
 
 #-------------
 def solvable_4_7(F, trian = False):
-    P = PolynomialRing(F, 2, "e1, e2")
-    e1 = list(P.gens())[0]
-    e2 = list(P.gens())[1]
-    FP = FractionField(P)
-    d = {('x0','x3'): {'x1':-1}, ('x1','x3'): {'x2':-1}, ('x2','x3'): {'x0':-e1, 'x1':-e2}}
-    L = LieAlgebra(FP, d, names='x0, x1, x2, x3')
+    P1 = PolynomialRing(F, "t1")
+    t1 = list(P1.gens())[0]
+    f1 = t1**2 - 2
+    K1 = NumberField(f1, 'a1')
+    a1 = list(K1.gens())[0]
+    P2 = PolynomialRing(K1, "t2")
+    t2 = list(P2.gens())[0]
+    f2 = t2**2 + 1
+    K2 = NumberField(f2, 'a2')
+    a2 = list(K2.gens())[0]
+    d = {('x0','x3'): {'x1':-1}, ('x1','x3'): {'x2':-1}, ('x2','x3'): {'x0':-a1, 'x1':-a2}}
+    L = LieAlgebra(K2, d, names='x0, x1, x2, x3')
     if trian == True:
         bTL = triangular_basis_solvable_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)
@@ -162,11 +180,13 @@ def solvable_4_8(F, trian = False):
 
 #-------------
 def solvable_4_9(F, trian = False):
-    P = PolynomialRing(F, 1, "e")
-    e = list(P.gens())[0]
-    FP = FractionField(P)
-    d = {('x0','x2'): {'x0':-1}, ('x0','x3'): {'x0':-1, 'x1':-e}, ('x1','x2'): {'x1':-1}, ('x1','x3'): {'x0':-1}}
-    L = LieAlgebra(FP, d, names='x0, x1, x2, x3')
+    P = PolynomialRing(F, "t")
+    t = list(P.gens())[0]
+    f = t**2 + 1
+    K = NumberField(f, 'a')
+    a = list(K.gens())[0]
+    d = {('x0','x2'): {'x0':-1}, ('x0','x3'): {'x0':-1, 'x1':-a}, ('x1','x2'): {'x1':-1}, ('x1','x3'): {'x0':-1}}
+    L = LieAlgebra(K, d, names='x0, x1, x2, x3')
     if trian == True:
         bTL = triangular_basis_solvable_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)
@@ -176,11 +196,13 @@ def solvable_4_9(F, trian = False):
 
 #-------------
 def solvable_4_10(F, trian = False):
-    P = PolynomialRing(F, 1, "e")
-    e = list(P.gens())[0]
-    FP = FractionField(P)
-    d = {('x0','x2'): {'x0':-1}, ('x0','x3'): {'x1':-1}, ('x1','x2'): {'x1':-1}, ('x1','x3'): {'x0':-e}}
-    L = LieAlgebra(FP, d, names='x0, x1, x2, x3')
+    P = PolynomialRing(F, "t")
+    t = list(P.gens())[0]
+    f = t**2 + 1
+    K = NumberField(f, 'a')
+    a = list(K.gens())[0]
+    d = {('x0','x2'): {'x0':-1}, ('x0','x3'): {'x1':-1}, ('x1','x2'): {'x1':-1}, ('x1','x3'): {'x0':-a}}
+    L = LieAlgebra(K, d, names='x0, x1, x2, x3')
     if trian == True:
         bTL = triangular_basis_solvable_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)
@@ -193,12 +215,18 @@ def solvable_4_11(F, trian = False):
     char = F.characteristic()
     if char != 2:
         raise ValueError("The field needs to have characteristic 2.")
-    P = PolynomialRing(F, 2, "e1, e2")
-    e1 = list(P.gens())[0]
-    e2 = list(P.gens())[1]
-    FP = FractionField(P)
-    d = {('x3','x0'): {'x0':1}, ('x3','x1'): {'x1':e2}, ('x3','x2'): {'x2':1+e2}, ('x2','x0'): {'x1':1}, ('x2','x1'): {'x0':e1}}
-    L = LieAlgebra(FP, d, names='x0, x1, x2, x3')
+    P1 = PolynomialRing(F, "t1")
+    t1 = list(P1.gens())[0]
+    f1 = t1**2 - 2
+    K1 = NumberField(f1, 'a1')
+    a1 = list(K1.gens())[0]
+    P2 = PolynomialRing(K1, "t2")
+    t2 = list(P2.gens())[0]
+    f2 = t2**2 + 1
+    K2 = NumberField(f2, 'a2')
+    a2 = list(K2.gens())[0]
+    d = {('x3','x0'): {'x0':1}, ('x3','x1'): {'x1':a2}, ('x3','x2'): {'x2':1+a2}, ('x2','x0'): {'x1':1}, ('x2','x1'): {'x0':a1}}
+    L = LieAlgebra(K2, d, names='x0, x1, x2, x3')
     if trian == True:
         bTL = triangular_basis_solvable_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)
@@ -219,11 +247,13 @@ def solvable_4_12(F, trian = False):
 
 #-------------
 def solvable_4_13(F, trian = False):
-    P = PolynomialRing(F, 1, "e")
-    e = list(P.gens())[0]
-    FP = FractionField(P)
-    d = {('x3','x0'): {'x0':1, 'x2':e}, ('x3','x1'): {'x1':1}, ('x3','x2'): {'x0':1}, ('x2','x0'): {'x1':1}}
-    L = LieAlgebra(FP, d, names='x0, x1, x2, x3')
+    P = PolynomialRing(F, "t")
+    t = list(P.gens())[0]
+    f = t**2 + 1
+    K = NumberField(f, 'a')
+    a = list(K.gens())[0]
+    d = {('x3','x0'): {'x0':1, 'x2':a}, ('x3','x1'): {'x1':1}, ('x3','x2'): {'x0':1}, ('x2','x0'): {'x1':1}}
+    L = LieAlgebra(K, d, names='x0, x1, x2, x3')
     if trian == True:
         bTL = triangular_basis_solvable_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)
@@ -233,11 +263,13 @@ def solvable_4_13(F, trian = False):
 
 #-------------
 def solvable_4_14(F, trian = False):
-    P = PolynomialRing(F, 1, "e")
-    e = list(P.gens())[0]
-    FP = FractionField(P)
-    d = {('x3','x0'): {'x2':e}, ('x3','x2'): {'x0':1}, ('x2','x0'): {'x1':1}}
-    L = LieAlgebra(FP, d, names='x0, x1, x2, x3')
+    P = PolynomialRing(F, "t")
+    t = list(P.gens())[0]
+    f = t**2 + 1
+    K = NumberField(f, 'a')
+    a = list(K.gens())[0]
+    d = {('x3','x0'): {'x2':a}, ('x3','x2'): {'x0':1}, ('x2','x0'): {'x1':1}}
+    L = LieAlgebra(K, d, names='x0, x1, x2, x3')
     if trian == True:
         bTL = triangular_basis_solvable_lie_algebra(L)
         l_iso = base_change_lie_algebra(L, bTL)

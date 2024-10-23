@@ -65,16 +65,19 @@ def invariants_eigenvalue_jordan_block(gensF):
 #-------------
 def invariants_diagonal(diag, gensF, K):
     len_diag = len(diag)
-    degree_K = K.polynomial().degree()
+    degree_K = K.absolute_polynomial().degree()
     for i in range(len_diag):
         diag[i] = K(diag[i])
     coeff = [0]*len_diag
     for i in range(len_diag):
-        coeff_diag = list(diag[i].polynomial())
-        if len(coeff_diag) < degree_K:
-            for j in range(degree_K-len(coeff_diag)):
-                coeff_diag = coeff_diag + [0]
-        coeff[i] = coeff_diag
+        if degree_K == 1:
+            coeff[i] = diag[i]
+        else:
+            coeff_diag = list(diag[i].polynomial())
+            if len(coeff_diag) < degree_K:
+                for j in range(degree_K-len(coeff_diag)):
+                    coeff_diag = coeff_diag + [0]
+            coeff[i] = coeff_diag
     sist_qq = Matrix(QQ, degree_K, len_diag)
     for i in range(len_diag):
         sist_qq[:,i] = vector(coeff[i])
@@ -102,6 +105,26 @@ def invariants_diagonal(diag, gensF, K):
             inv_comp = inv_comp*gensF[j]**matrix_sol_hermite[i,j]
         inv = inv + [inv_comp]
     return inv
+#-------------
+
+#-------------
+def extension_field_roots(f):
+    K = f.base_ring()
+    degree_f = f.degree()
+    f_fac = f.factor()
+    var_bool = True
+    cont = 0
+    while var_bool:
+        var_bool = False
+        for i in range(len(f_fac)):
+            if f_fac[i][0].degree() != 1:
+                K = K.extension(f_fac[i][0],'s'+str(cont))
+                f = f.change_ring(K)
+                f_fac = f.factor()
+                cont = cont + 1
+                var_bool = True
+                break
+    return K
 #-------------
 
 #-------------
@@ -139,7 +162,8 @@ def invariants_matrix_derivation(diff):
     M = matrix_of_derivation(diff)
     n = M.nrows()
     f = M.characteristic_polynomial()
-    K = f.splitting_field("a")
+    K = extension_field_roots(f)
+    #K = f.splitting_field('a')
     M = Matrix(K,M)
     J, P = M.jordan_form(transformation=True)
     diff = derivation_of_matrix(M)
@@ -152,8 +176,8 @@ def invariants_matrix_derivation(diff):
         for i in range(len(gensF)):
             gensAlt[j] = gensAlt[j] + P[i,j]*gensF[i]
     # Non-repeated eigenvalues
-    eigenVR = J.eigenvalues()
-    eigenV = [J.eigenvalues()[0]]
+    eigenVR = [J[k][k] for k in range(J.nrows())]
+    eigenV = [eigenVR[0]]
     cont = 0
     for i in range(1,len(eigenVR)):
         if eigenVR[i] != eigenV[cont]:
