@@ -16,21 +16,25 @@ def derivation_of_matrix(M):
 
 #-------------
 def matrix_of_derivation(diff):
-
-    P = diff.parent().base()
+    D = diff.parent()
+    P = D.base()
+    gensD = D.gens()
     gensP = P.gens()
     n = len(gensP)
+    c = 0
+    if n != len(gensD):
+        c = len(gensD) - n
     M = Matrix(P.base_ring(), n)
     mc = diff.monomial_coefficients()
 
-    for i in range(n):
+    for i in range(c,n+c):
         pol = mc[i].numerator() if i in mc.keys() else P.zero().numerator()
         mon = pol.monomials()
         coeff = pol.coefficients()
         mon_coeff_dict = dict( zip( mon, coeff ))
         for j in range(len(mon)):
             cont = gensP.index( mon[j] )
-            M[cont,i] = mon_coeff_dict[mon[j]]
+            M[cont,i-c] = mon_coeff_dict[mon[j]]
 
     return M
 #-------------
@@ -162,14 +166,9 @@ def invariants_matrix_derivation(diff):
     # Extending the matrix to a field where its Jordan form can be taken
     M = matrix_of_derivation(diff)
     f = M.characteristic_polynomial()
-<<<<<<< HEAD
     K = extension_field_roots(f)
     #K = f.splitting_field('a')
     M = Matrix(K,M)
-=======
-    K = f.splitting_field("a")
-    M = M.change_ring(K)
->>>>>>> c07ebd5eac74f74264a898558a160bca86635ec3
     J, P = M.jordan_form(transformation=True)
     diff = derivation_of_matrix(M)
     D = diff.parent()
