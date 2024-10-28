@@ -268,7 +268,7 @@ def nilpotent_lie_algebra2( F, args, standard_basis = False ):
 #-------------
 
 #-------------
-def solvable_lie_algebra2( F, args, standard_basis = False ):
+def solvable_lie_algebra( F, args, standard_basis = False ):
     '''
         INPUT:
 

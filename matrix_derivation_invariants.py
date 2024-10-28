@@ -165,15 +165,13 @@ def invariants_matrix_derivation(diff):
     '''
     # Extending the matrix to a field where its Jordan form can be taken
     M = matrix_of_derivation(diff)
-    f = M.characteristic_polynomial()
-    K = extension_field_roots(f)
-    #K = f.splitting_field('a')
-    M = Matrix(K,M)
-    J, P = M.jordan_form(transformation=True)
-    diff = derivation_of_matrix(M)
-    D = diff.parent()
-    F = D.base()
+    F = diff.parent().base()
     gensF = F.gens()
+    f = M.characteristic_polynomial()
+    #K = extension_field_roots(f)
+    K = f.splitting_field('a')
+    M = Matrix(K,M)
+    J, P = M.jordan_form(transformation=True)   
     # Change of basis
     gensAlt = [0]*len(gensF)
     for j in range(len(gensF)):

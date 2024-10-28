@@ -261,7 +261,7 @@ def solvable_4_14(F, trian = False):
 #-------------
 
 #-------------
-def solvable_lie_algebra(F, param, trian = False):
+def solvable_lie_algebra2(F, param, trian = False):
     e = str(param[0]) + '_' + str(param[1])
     return globals()['solvable_' + e](F, trian)
 #-------------

@@ -27,7 +27,102 @@ def matrices_associated_with_base(L):
 #-------------
 
 #-------------
-def print_solvable2():
+def is_linear_derivation(diff):
+    coeff = diff.list()
+    for i in range(len(coeff)):
+        if coeff[i].denominator() != 1 or coeff[i].numerator().degree() not in [-1,0,1]:
+            return False
+    return True
+#-------------
+
+#-------------
+def is_local_nilpotent_derivation(diff):
+    D = diff.parent()
+    F = D.base()
+    P = F.base()
+    R = P.base()
+    bF = list(F.gens())
+    diff_l = diff.list()
+    if diff == D.zero():
+        return True, [i for i in range(len(diff_l))], [-1,-1]
+    list_org = []
+    for i in range(len(diff_l)):
+        if diff_l[i] not in P:
+            return False, [], [0,0]
+        else:
+            diff_l[i] = P(diff_l[i])
+    for i in range(len(diff_l)):
+        if diff_l[i] == 0:
+            list_org = list_org + [i]
+    firt_non_zero = len(list_org)
+    for i in range(len(diff_l)):
+        if diff_l[i] in R and diff_l[i] != 0:
+            list_org = list_org + [i]
+    firt_non_const = len(list_org)
+    if list_org == []:
+        return False, [], [0,0]
+    val_bool = True
+    while val_bool:
+        val_bool = False
+        list_aux = []
+        for i in range(len(diff_l)):
+            if i in list_org:
+                continue
+            var = list(diff_l[i].variables())
+            var_test = 0
+            for j in range(len(var)):
+                for k in range(len(list_org)):
+                    if var[j] == bF[list_org[k]]:
+                        var_test = var_test + 1
+            if var_test == len(var):
+                list_aux = list_aux + [i]
+        if len(list_org) < len(diff_l) and list_aux == []:
+            return False, [], [0,0]
+        if list_aux != []:
+            list_org = list_org + list_aux
+            val_bool = True
+    return True, list_org, [firt_non_zero, firt_non_const]
+#-------------
+
+#-------------
+def get_derivation_on_generator(diff, param):
+    coeff = [diff(param[i]) for i in range(len(param))]
+    new_coeff = []
+    for i in range(len(coeff)):
+        v, der = is_element_of_subalgebra(param,coeff[i])
+        if v == False:
+            return False
+        new_coeff = new_coeff + [der[0]]
+    F = FractionField(new_coeff[0].parent())
+    D = F.derivation_module()
+    diff_alt = sum(new_coeff[i]*D.gens()[i] for i in range(len(new_coeff)))
+    dict_param = {F.gens()[i]:param[i] for i in range(len(param))}
+    return diff_alt, dict_param
+#-------------
+
+#-------------
+def generators_algebra_rational_invariants2(L):
+    bEspL = triangular_basis_lie_algebra(L)
+    l = base_change_lie_algebra(L, bEspL)
+    der = derivations_associated_with_base(l)
+    inv = invariants_matrix_derivation(der[0])
+    for i in range(1,len(der)):
+        diff, dict_diff = get_derivation_on_generator(der[i], inv)
+        if is_linear_derivation(diff) == True:
+            inv_aux = invariants_matrix_derivation(diff)
+            inv = [inv_aux[j].subs(dict_diff) for j in range(len(inv_aux))]
+        else:
+            var_bool, list_org, [first_not_zero, first_not_const] = is_local_nilpotent_derivation(diff)
+            if var_bool == False:
+                raise ValueError("The derivation is neither linear nor locally nilpotent.")
+            else:
+                inv_aux = method_characteristics_local_nilpotent(diff)
+                inv = [inv_aux[j].subs(dict_diff) for j in range(len(inv_aux))]
+    return inv
+#-------------
+
+#-------------
+def print_solvable():
     list_solv = [
     [2,1],
     [2,2],
@@ -52,7 +147,7 @@ def print_solvable2():
     for i in range(len(list_solv)):
         print("Parâmentro")
         print(list_solv[i],"\n")
-        l = solvable_lie_algebra2(QQ,list_solv[i])
+        l = solvable_lie_algebra(QQ,list_solv[i])
         btri = triangular_basis_solvable_lie_algebra(l)
         L = base_change_lie_algebra(l, btri)
         print("Matrizes")
@@ -79,8 +174,8 @@ def print_solvable2():
             print(M)
             print()
             f = M.characteristic_polynomial()
-            K = extension_field_roots(f)
-            #K = f.splitting_field("a")
+            #K = extension_field_roots(f)
+            K = f.splitting_field("a")
             M = Matrix(K,M)
             J, P = M.jordan_form(transformation=True)
             print("Jordan")
@@ -94,7 +189,7 @@ def print_solvable2():
 #-------------
 
 #-------------
-def print_solvable():
+def print_solvable2():
     list_solv = [
     [2,1],
     [2,2],
@@ -119,7 +214,7 @@ def print_solvable():
     for i in range(len(list_solv)):
         print("Parâmentro")
         print(list_solv[i],"\n")
-        l = solvable_lie_algebra(QQ,list_solv[i])
+        l = solvable_lie_algebra2(QQ,list_solv[i])
         btri = triangular_basis_solvable_lie_algebra(l)
         L = base_change_lie_algebra(l, btri)
         print("Matrizes")

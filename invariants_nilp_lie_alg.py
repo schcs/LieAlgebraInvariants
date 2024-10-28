@@ -140,6 +140,36 @@ def polynomial_integral(pol):
 #-------------
 
 #-------------
+def method_characteristics_local_nilpotent(diff):
+    var_bool, list_org, [first_not_zero, first_not_const] = is_local_nilpotent_derivation(diff)
+    if var_bool == False:
+        raise ValueError("The derivation is not locally nilpotent.")
+    F = FractionField(diff.parent().base())
+    P = F.base()
+    bF = list(F.gens())
+    diff_l = diff.list()
+    for i in range(len(bF)):
+        bF[i] = P(bF[i])
+    if first_not_zero == -1:
+        return bF
+    curve = [0]*len(bF)
+    T = PolynomialRing(F, "t")
+    t = T.gens()[0]
+    for i in range(first_not_const):
+        curve[list_org[i]] = diff_l[list_org[i]]*t + bF[list_org[i]]
+    q = -bF[list_org[first_not_zero]]/diff_l[list_org[first_not_zero]]
+    for i in range(first_not_const,len(bF)):
+        aux_c = diff_l[list_org[i]]
+        der_aux_c = T(aux_c.subs({aux_c.parent().gens()[j] : curve[j] for j in range(len(bF))}))
+        curve[list_org[i]] = polynomial_integral(der_aux_c) + bF[list_org[i]]
+    inv = [0]*(len(bF)-1)
+    curve.pop(list_org[first_not_zero])
+    for i in range(len(bF)-1):
+        inv[i] = F(curve[i].subs({t:q}))
+    return inv
+#-------------
+
+#-------------
 def method_characteristics_nilpotent(d, phi = 0):
     domain_d = d.domain()
     frac_domain_d = FractionField(domain_d)
