@@ -381,16 +381,11 @@ def structure_constants(L, bLdada):
     FracR = FractionField(R)
     x = R.gens()
     M = matrix(FracR, dimL)
-    for j in range(dimL):
-        for i in range(dimL):
-            for k in range(dimL):
-                M[i,j] = M[i,j] + coord_base(L, bL, L.bracket(bL[j],bL[i]))[k]*x[k]
-    P = matrix(F, dimL)
     for i in range(dimL):
-        P[:,i] = vector(coord_base(L, bL, bLdada[i]))
-    Ptrans = P.transpose()
-    E = Ptrans*M*P
-    return E
+        for j in range(dimL):
+            for k in range(dimL):
+                M[i,j] = M[i,j] + l.bracket(bL[i],bL[j]).to_vector()[k]*x[k]
+    return M
 #-------------
 
 #-------------

@@ -165,18 +165,23 @@ def invariants_matrix_derivation(diff):
     '''
     # Extending the matrix to a field where its Jordan form can be taken
     M = matrix_of_derivation(diff)
-    F = diff.parent().base()
-    gensF = F.gens()
+    F_ori = diff.parent().base()
+    gensF_ori = F_ori.gens()
     f = M.characteristic_polynomial()
     #K = extension_field_roots(f)
     K = f.splitting_field('a')
     M = Matrix(K,M)
-    J, P = M.jordan_form(transformation=True)   
+    J, P = M.jordan_form(transformation=True) 
+    diff = derivation_of_matrix(M)
+    D = diff.parent()
+    F_alt = D.base()
+    gensF_alt = list(F_alt.gens())
+    dict_F = {gensF_alt[i]:gensF_ori[i] for i in range(len(gensF_alt))} 
     # Change of basis
-    gensAlt = [0]*len(gensF)
-    for j in range(len(gensF)):
-        for i in range(len(gensF)):
-            gensAlt[j] = gensAlt[j] + P[i,j]*gensF[i]
+    gensAlt = [0]*len(gensF_alt)
+    for j in range(len(gensF_alt)):
+        for i in range(len(gensF_alt)):
+            gensAlt[j] = gensAlt[j] + P[i,j]*gensF_alt[i]
     # Non-repeated eigenvalues
     eigenVR = [J[k][k] for k in range(J.nrows())]
     eigenV = [eigenVR[0]]
@@ -245,5 +250,6 @@ def invariants_matrix_derivation(diff):
             inv = inv + [dateInv[blockNotNil[0]][1][1]/dateInv[blockNotNil[0]][1][0] - dateInv[blockNil[j]][1][1]/dateInv[blockNil[j]][1][0]]
         for i in range(1,len(blockNotNil)):
             inv = inv + [dateInv[blockNotNil[i]][1][1]/dateInv[blockNotNil[i]][1][0] - dateInv[blockNil[0]][1][1]/dateInv[blockNil[0]][1][0]]
+    inv = [inv[j].subs(dict_F) for j in range(len(inv))]
     return inv
 #-------------

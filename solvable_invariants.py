@@ -9,10 +9,10 @@ def derivations_associated_with_base(L):
     bD_comp = D.basis().list()
     bD = bD_comp[len(bD_comp)-len(bL):len(bD_comp)] # Elimina os possíveis elementos do corpo base de L
     der = []
-    for j in range(len(bL)):
+    for i in range(len(bL)):
         z = D.zero()
-        for i in range(len(bL)):
-            z = z + S[i,j]*bD[i]
+        for j in range(len(bL)):
+            z = z + S[i,j]*bD[j]
         der = der + [z]
     return der
 #-------------
@@ -38,11 +38,17 @@ def is_linear_derivation(diff):
 #-------------
 def is_local_nilpotent_derivation(diff):
     D = diff.parent()
+    bD = list(D.gens())
     F = D.base()
+    bF = list(F.gens())
     P = F.base()
     R = P.base()
-    bF = list(F.gens())
+    c = 0
+    if len(bF) != len(bD):
+        c = len(bD) - len(bF)
     diff_l = diff.list()
+    for i in range(c):
+        diff_l.pop(i)
     if diff == D.zero():
         return True, [i for i in range(len(diff_l))], [-1,-1]
     list_org = []
@@ -101,16 +107,98 @@ def get_derivation_on_generator(diff, param):
 #-------------
 
 #-------------
+def simplify_invariants(inv):
+    if len(inv) in [0,1]:
+        return inv
+    inv_simp = []
+    with_den = []
+    for i in range(len(inv)):
+        if inv[i].denominator() != 1:
+            with_den = with_den + [inv[i]]
+        else:
+            inv_simp = inv_simp + [inv[i]]
+    if inv_simp == []:
+        return inv
+    var_bool = True
+    while var_bool:
+        var_bool = False
+        rem = []
+        for i in range(len(with_den)):
+            v, der = is_element_of_subalgebra(inv_simp, with_den[i].denominator())
+            if v == True:
+                var_bool = True
+                inv_simp = inv_simp + [with_den[i].numerator()]
+                rem = rem + [with_den[i]]
+        with_den = [x for x in with_den if x not in rem]
+    inv_simp = inv_simp + with_den
+    for i in range(len(inv_simp)):
+        coeff = inv_simp[i].numerator().coefficients()
+        if len(coeff) == 1:
+            inv_simp[i] = inv_simp[i]/coeff[0]
+        else:
+            var = 0
+            for j in range(1,len(coeff)):
+                if coeff[j] not in [coeff[0], -coeff[0]]:
+                    var = 1
+            if var == 0:
+                inv_simp[i] = inv_simp[i]/coeff[0]
+    return inv_simp
+#-------------
+
+#-------------
+def generators_algebra_rational_invariants_nilpotent(l):
+    if l.is_nilpotent() == False:
+        raise ValueError("The algebra is not nilpotent.")
+    bl_tri = triangular_basis_nilpotent_lie_algebra(l)
+    l = base_change_lie_algebra(l, bl_tri)
+    der = derivations_associated_with_base(l)
+    F = der[0].parent().base()
+    gensF = list(F.gens())
+    center = [gensF[0]]
+    for i in range(1,len(der)):
+        if der[i] == 0:
+            center = center + [gensF[i]]
+        else:
+            break
+    if len(center) == len(der):
+        return gensF
+    inv = method_characteristics_local_nilpotent(der[len(center)])
+    for i in range(len(center)+1,len(der)):
+        diff, dict_diff = get_derivation_on_generator(der[i], inv)
+        var_bool, list_org, [first_not_zero, first_not_const] = is_local_nilpotent_derivation(diff)
+        if var_bool == False:
+            raise ValueError("The derivation is neither linear nor locally nilpotent.")
+        else:
+            inv_aux = method_characteristics_local_nilpotent(diff)
+            inv = [inv_aux[j].subs(dict_diff) for j in range(len(inv_aux))]
+            for j in range(len(inv)):
+                fact = inv[j].factor()
+                if len(fact) > 1:
+                    for k in range(len(fact)):
+                        var_aux = 0
+                        for l in range(len(fact[k][0].variables())):
+                            if fact[k][0].variables()[l] not in center:
+                                var_aux = 1
+                        if var_aux == 0:
+                            inv[j] = inv[j]/fact[k][0]
+    return inv
+#-------------
+
+#-------------
 def generators_algebra_rational_invariants2(L):
     bEspL = triangular_basis_lie_algebra(L)
     l = base_change_lie_algebra(L, bEspL)
     der = derivations_associated_with_base(l)
     inv = invariants_matrix_derivation(der[0])
+    inv = simplify_invariants(inv)
     for i in range(1,len(der)):
         diff, dict_diff = get_derivation_on_generator(der[i], inv)
+        if len(diff.parent().gens()) == 1 and len(diff.list()) == 1 and diff.list()[0] != 0:
+            return []
         if is_linear_derivation(diff) == True:
             inv_aux = invariants_matrix_derivation(diff)
             inv = [inv_aux[j].subs(dict_diff) for j in range(len(inv_aux))]
+            inv = simplify_invariants(inv)
         else:
             var_bool, list_org, [first_not_zero, first_not_const] = is_local_nilpotent_derivation(diff)
             if var_bool == False:
@@ -118,6 +206,7 @@ def generators_algebra_rational_invariants2(L):
             else:
                 inv_aux = method_characteristics_local_nilpotent(diff)
                 inv = [inv_aux[j].subs(dict_diff) for j in range(len(inv_aux))]
+                inv = simplify_invariants(inv)
     return inv
 #-------------
 

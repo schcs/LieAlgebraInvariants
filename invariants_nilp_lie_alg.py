@@ -144,19 +144,30 @@ def method_characteristics_local_nilpotent(diff):
     var_bool, list_org, [first_not_zero, first_not_const] = is_local_nilpotent_derivation(diff)
     if var_bool == False:
         raise ValueError("The derivation is not locally nilpotent.")
-    F = FractionField(diff.parent().base())
-    P = F.base()
+    D = diff.parent()
+    bD = list(D.gens())
+    F = FractionField(D.base())
     bF = list(F.gens())
+    P = F.base()
+    R = P.base()
+    c = 0
+    if len(bF) != len(bD):
+        c = len(bD) - len(bF)
     diff_l = diff.list()
-    for i in range(len(bF)):
-        bF[i] = P(bF[i])
+    for i in range(c):
+        diff_l.pop(i)
     if first_not_zero == -1:
         return bF
+    for i in range(len(bF)):
+        bF[i] = P(bF[i])
     curve = [0]*len(bF)
     T = PolynomialRing(F, "t")
     t = T.gens()[0]
+    center = []
+    for i in range(first_not_zero):
+        center = center + [bF[list_org[i]]]
     for i in range(first_not_const):
-        curve[list_org[i]] = diff_l[list_org[i]]*t + bF[list_org[i]]
+        curve[list_org[i]] = diff_l[list_org[i]]*t + T(bF[list_org[i]])
     q = -bF[list_org[first_not_zero]]/diff_l[list_org[first_not_zero]]
     for i in range(first_not_const,len(bF)):
         aux_c = diff_l[list_org[i]]
@@ -165,7 +176,19 @@ def method_characteristics_local_nilpotent(diff):
     inv = [0]*(len(bF)-1)
     curve.pop(list_org[first_not_zero])
     for i in range(len(bF)-1):
-        inv[i] = F(curve[i].subs({t:q}))
+        d = curve[i].degree()
+        inv[i] = P(curve[i].subs({t:q})*diff_l[list_org[first_not_zero]]**d)
+        inv[i] = inv[i]/inv[i].content()
+        fact = inv[i].factor()
+        if len(fact) > 1:
+            for j in range(len(fact)):
+                var_aux = 0
+                for k in range(len(fact[j][0].variables())):
+                    if fact[j][0].variables()[k] not in center:
+                        var_aux = 1
+                if var_aux == 0:
+                    inv[i] = inv[i]/fact[j][0]
+        inv[i] = F(inv[i])
     return inv
 #-------------
 
