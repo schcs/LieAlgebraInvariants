@@ -377,7 +377,7 @@ def structure_constants(L, bLdada = False):
     if bLdada == False:
         bL = list(L.basis())
     else:
-        bL = bLdada
+        bL = bLdada#
     dimL = len(bL)
     F = L.base()
     R = PolynomialRing(F, dimL, L.basis().keys().list())
