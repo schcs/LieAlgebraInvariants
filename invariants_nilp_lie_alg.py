@@ -141,7 +141,7 @@ def polynomial_integral(pol):
 
 #-------------
 def method_characteristics_local_nilpotent(diff):
-    var_bool, list_org, [first_not_zero, first_not_const] = is_local_nilpotent_derivation(diff)
+    var_bool, list_org, first_not_zero = is_local_nilpotent_derivation(diff)
     if var_bool == False:
         raise ValueError("The derivation is not locally nilpotent.")
     D = diff.parent()
@@ -163,13 +163,13 @@ def method_characteristics_local_nilpotent(diff):
     curve = [0]*len(bF)
     T = PolynomialRing(F, "t")
     t = T.gens()[0]
-    center = []
+    #center = []
+    #for i in range(first_not_zero):
+    #    center = center + [bF[list_org[i]]]
     for i in range(first_not_zero):
-        center = center + [bF[list_org[i]]]
-    for i in range(first_not_const):
         curve[list_org[i]] = diff_l[list_org[i]]*t + T(bF[list_org[i]])
     q = -bF[list_org[first_not_zero]]/diff_l[list_org[first_not_zero]]
-    for i in range(first_not_const,len(bF)):
+    for i in range(first_not_zero,len(bF)):
         aux_c = diff_l[list_org[i]]
         der_aux_c = T(aux_c.subs({aux_c.parent().gens()[j] : curve[j] for j in range(len(bF))}))
         curve[list_org[i]] = polynomial_integral(der_aux_c) + bF[list_org[i]]
@@ -179,15 +179,15 @@ def method_characteristics_local_nilpotent(diff):
         d = curve[i].degree()
         inv[i] = P(curve[i].subs({t:q})*diff_l[list_org[first_not_zero]]**d)
         inv[i] = inv[i]/inv[i].content()
-        fact = inv[i].factor()
-        if len(fact) > 1:
-            for j in range(len(fact)):
-                var_aux = 0
-                for k in range(len(fact[j][0].variables())):
-                    if fact[j][0].variables()[k] not in center:
-                        var_aux = 1
-                if var_aux == 0:
-                    inv[i] = inv[i]/fact[j][0]
+        #fact = inv[i].factor()
+        #if len(fact) > 1:
+        #    for j in range(len(fact)):
+        #        var_aux = 0
+        #        for k in range(len(fact[j][0].variables())):
+        #            if fact[j][0].variables()[k] not in center:
+        #                var_aux = 1
+        #        if var_aux == 0:
+        #            inv[i] = inv[i]/fact[j][0]
         inv[i] = F(inv[i])
     return inv
 #-------------

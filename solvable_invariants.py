@@ -3,17 +3,9 @@ import sys
 #-------------
 def derivations_associated_with_base(L):
     bL = L.basis().list()
-    S = structure_constants(L,bL)
-    F = S[0,0].parent()
-    D = F.derivation_module()
-    bD_comp = D.basis().list()
-    bD = bD_comp[len(bD_comp)-len(bL):len(bD_comp)] # Elimina os possíveis elementos do corpo base de L
-    der = []
+    der = [0]*(len(bL))
     for i in range(len(bL)):
-        z = D.zero()
-        for j in range(len(bL)):
-            z = z + S[i,j]*bD[j]
-        der = der + [z]
+        der[i] = differential_operator(L, bL[i])
     return der
 #-------------
 
@@ -50,11 +42,11 @@ def is_local_nilpotent_derivation(diff):
     for i in range(c):
         diff_l.pop(i)
     if diff == D.zero():
-        return True, [i for i in range(len(diff_l))], [-1,-1]
+        return True, [i for i in range(len(diff_l))], -1
     list_org = []
     for i in range(len(diff_l)):
         if diff_l[i] not in P:
-            return False, [], [0,0]
+            return False, [], 0
         else:
             diff_l[i] = P(diff_l[i])
     for i in range(len(diff_l)):
@@ -64,9 +56,9 @@ def is_local_nilpotent_derivation(diff):
     for i in range(len(diff_l)):
         if diff_l[i] in R and diff_l[i] != 0:
             list_org = list_org + [i]
-    firt_non_const = len(list_org)
+    #firt_non_const = len(list_org)
     if list_org == []:
-        return False, [], [0,0]
+        return False, [], 0
     val_bool = True
     while val_bool:
         val_bool = False
@@ -83,25 +75,46 @@ def is_local_nilpotent_derivation(diff):
             if var_test == len(var):
                 list_aux = list_aux + [i]
         if len(list_org) < len(diff_l) and list_aux == []:
-            return False, [], [0,0]
+            return False, [], 0
         if list_aux != []:
             list_org = list_org + list_aux
             val_bool = True
-    return True, list_org, [firt_non_zero, firt_non_const]
+    return True, list_org, firt_non_zero #[firt_non_zero, firt_non_const]
 #-------------
 
 #-------------
 def get_derivation_on_generator(diff, param):
     coeff = [diff(param[i]) for i in range(len(param))]
     new_coeff = []
+    non_zero = []
     for i in range(len(coeff)):
-        v, der = is_element_of_subalgebra(param,coeff[i])
-        if v == False:
-            return False
-        new_coeff = new_coeff + [der[0]]
-    F = FractionField(new_coeff[0].parent())
+        if coeff[i] == 0:
+            new_coeff = new_coeff + [0]
+        else:
+            v, der = is_element_of_subalgebra(param,coeff[i])
+            if v == False:
+                return False
+            new_coeff = new_coeff + [der[0]]
+            non_zero = non_zero + [i]
+    if non_zero == []:
+        R = param[0].parent().base_ring()
+        P = PolynomialRing(R, len(param), "t")
+        F = FractionField(P)
+        D = F.derivation_module()
+        c = 0
+        if len(F.gens()) != len(D.gens()):
+            c = len(D.gens()) - len(F.gens())
+        diff = D.zero()
+        dict_param = {F.gens()[i]:param[i] for i in range(len(param))}
+        return diff, dict_param
+    F = FractionField(new_coeff[non_zero[0]].parent())
+    for i in range(len(new_coeff)):
+        new_coeff[i] = F(new_coeff[i])
     D = F.derivation_module()
-    diff_alt = sum(new_coeff[i]*D.gens()[i] for i in range(len(new_coeff)))
+    c = 0
+    if len(F.gens()) != len(D.gens()):
+        c = len(D.gens()) - len(F.gens()) 
+    diff_alt = sum(new_coeff[i]*D.gens()[c+i] for i in range(len(new_coeff)))
     dict_param = {F.gens()[i]:param[i] for i in range(len(param))}
     return diff_alt, dict_param
 #-------------
@@ -153,6 +166,7 @@ def generators_algebra_rational_invariants_nilpotent(l):
     l = base_change_lie_algebra(l, bl_tri)
     der = derivations_associated_with_base(l)
     F = der[0].parent().base()
+    P = F.base()
     gensF = list(F.gens())
     center = [gensF[0]]
     for i in range(1,len(der)):
@@ -163,24 +177,23 @@ def generators_algebra_rational_invariants_nilpotent(l):
     if len(center) == len(der):
         return gensF
     inv = method_characteristics_local_nilpotent(der[len(center)])
+    ideal_center = P.ideal(center)
     for i in range(len(center)+1,len(der)):
-        diff, dict_diff = get_derivation_on_generator(der[i], inv)
-        var_bool, list_org, [first_not_zero, first_not_const] = is_local_nilpotent_derivation(diff)
-        if var_bool == False:
-            raise ValueError("The derivation is neither linear nor locally nilpotent.")
-        else:
-            inv_aux = method_characteristics_local_nilpotent(diff)
-            inv = [inv_aux[j].subs(dict_diff) for j in range(len(inv_aux))]
-            for j in range(len(inv)):
-                fact = inv[j].factor()
-                if len(fact) > 1:
-                    for k in range(len(fact)):
-                        var_aux = 0
-                        for l in range(len(fact[k][0].variables())):
-                            if fact[k][0].variables()[l] not in center:
-                                var_aux = 1
-                        if var_aux == 0:
-                            inv[j] = inv[j]/fact[k][0]
+        #print("início")
+        #print(i)
+        diff, dicio = get_derivation_on_generator(der[i],inv)
+        inv_aux = method_characteristics_local_nilpotent(diff)
+        inv = [inv_aux[j].subs(dicio) for j in range(len(inv_aux))]
+        for j in range(len(inv)):
+            if P(inv[j].denominator()) in ideal_center:
+                inv[j] = inv[j].numerator()
+            fact = inv[j].factor()
+            if len(fact) > 1:
+                for k in range(len(fact)):
+                    if P(fact[k][0]) in ideal_center:
+                        inv[j] = inv[j]/fact[k][0]
+        #print("fim")
+        #print("-----")
     return inv
 #-------------
 
@@ -200,7 +213,7 @@ def generators_algebra_rational_invariants2(L):
             inv = [inv_aux[j].subs(dict_diff) for j in range(len(inv_aux))]
             inv = simplify_invariants(inv)
         else:
-            var_bool, list_org, [first_not_zero, first_not_const] = is_local_nilpotent_derivation(diff)
+            var_bool, list_org, first_not_zero= is_local_nilpotent_derivation(diff)
             if var_bool == False:
                 raise ValueError("The derivation is neither linear nor locally nilpotent.")
             else:
