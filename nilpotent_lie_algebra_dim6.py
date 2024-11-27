@@ -448,6 +448,7 @@ def nilpotent_lie_algebra(F, param, trian = False):
     return globals()['nilpotent_' + e](F, trian)
 #-------------
 
+#-------------
 def comp_nilp(p1,p2):
     l = nilpotent_lie_algebra(QQ,p1)
     l2 = nilpotent_lie_algebra(QQ,p2)
@@ -457,4 +458,5 @@ def comp_nilp(p1,p2):
     m2 = structure_constants(l2,bl2)
     sys.displayhook(m1)
     print("------")
+#-------------
     sys.displayhook(m2)

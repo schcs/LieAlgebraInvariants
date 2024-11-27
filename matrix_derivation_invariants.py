@@ -2,44 +2,6 @@ from sage.all import ZZ, Matrix, QQ, lcm, PolynomialRing, vector
 # from sage.rings.number_field.splitting_field import SplittingFieldAbort
 
 #-------------
-def derivation_of_matrix(M):
-    K = M.base_ring()
-    n = M.nrows()
-    F = PolynomialRing( K, "x", n ).fraction_field()
-    gensF = F.gens()
-    D = F.derivation_module()
-    bD = D.basis().list()
-
-    return sum( M[i,j]*gensF[i]*bD[j] for i in range( n ) for j in range( n ))
-
-#-------------
-
-#-------------
-def matrix_of_derivation(diff):
-    D = diff.parent()
-    P = D.base()
-    gensD = D.gens()
-    gensP = P.gens()
-    n = len(gensP)
-    c = 0
-    if n != len(gensD):
-        c = len(gensD) - n
-    M = Matrix(P.base_ring(), n)
-    mc = diff.monomial_coefficients()
-
-    for i in range(c,n+c):
-        pol = mc[i].numerator() if i in mc.keys() else P.zero().numerator()
-        mon = pol.monomials()
-        coeff = pol.coefficients()
-        mon_coeff_dict = dict( zip( mon, coeff ))
-        for j in range(len(mon)):
-            cont = gensP.index( mon[j] )
-            M[cont,i-c] = mon_coeff_dict[mon[j]]
-
-    return M
-#-------------
-
-#-------------
 
 # the function implements the computation of the invariants given
 # in Lemma 3.1 of Snobl and Winternitz for the Jordan block with
