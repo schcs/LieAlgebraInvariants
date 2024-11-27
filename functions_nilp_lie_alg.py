@@ -343,7 +343,7 @@ def isomorphic_random_nilp_lie_alg(L):
 #-------------
 
 #-------------
-def structure_constants(L, bLdada):
+def structure_constants(L, bLdada = False ):
     '''
         INPUT:
 
@@ -374,6 +374,10 @@ def structure_constants(L, bLdada):
             [  0  x0   0   0 -x3   0]
 
     '''
+    
+    if bLdada == False: 
+        bLdada = l.basis().list()
+        
     bL = list(L.basis())
     dimL = len(bL)
     F = L.base()
@@ -384,7 +388,8 @@ def structure_constants(L, bLdada):
     for i in range(dimL):
         for j in range(dimL):
             for k in range(dimL):
-                M[i,j] = M[i,j] + l.bracket(bL[i],bL[j]).to_vector()[k]*x[k]
+                #breakpoint()
+                M[i,j] = M[i,j] + L.bracket(bL[i],bL[j]).to_vector()[k]*x[k]
     return M
 #-------------
 
