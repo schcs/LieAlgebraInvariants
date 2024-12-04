@@ -338,11 +338,28 @@ def generators_algebra_rational_invariants_nilpotent(l):
     if len(center) == len(der):
         return gensF
     inv = method_characteristics_local_nilpotent(der[len(center)])
+    print("inv")
+    print(inv)
     ideal_center = P.ideal(center)
     for i in range(len(center)+1,len(der)):
         print("início")
         print(i)
+        print("der")
+        print(der[i])
         diff, dicio = get_derivation_on_generator(der[i],inv)
+        print("diff")
+        print(diff)
+        print("first")
+        if diff == 0:
+            print(0)
+        else:
+            first = 0
+            dl = diff.list()
+            for j in range(len(dl)):
+                if dl[j] != 0:
+                    first = dl[j].subs(dicio)
+                    break
+            print(first)
         inv_aux = method_characteristics_local_nilpotent(diff)
         inv = [inv_aux[j].subs(dicio) for j in range(len(inv_aux))]
         for j in range(len(inv)):
@@ -353,6 +370,8 @@ def generators_algebra_rational_invariants_nilpotent(l):
                 for k in range(len(fact)):
                     if P(fact[k][0]) in ideal_center:
                         inv[j] = inv[j]/fact[k][0]
+        print("inv")
+        print(inv)
         print("fim")
         print("-----")
     return inv
