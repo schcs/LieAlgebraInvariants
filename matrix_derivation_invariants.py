@@ -1,43 +1,10 @@
-from sage.rings.number_field.splitting_field import SplittingFieldAbort
-
-#-------------
-def derivation_of_matrix(M):
-    K = M.base_ring()
-    n = M.nrows()
-    F = PolynomialRing( K, "x", n ).fraction_field()
-    gensF = F.gens()
-    D = F.derivation_module()
-    bD = D.basis().list()
-    
-    return sum( M[i,j]*gensF[i]*bD[j] for i in range( n ) for j in range( n ))
-    
-#-------------
-
-#-------------
-def matrix_of_derivation(diff):
-
-    P = diff.parent().base()
-    gensP = P.gens()
-    n = len(gensP)
-    M = Matrix(P.base_ring(), n)
-    mc = diff.monomial_coefficients()
-    
-    for i in range(n):    
-        pol = mc[i].numerator() if i in mc.keys() else P.zero().numerator()
-        mon = pol.monomials()
-        coeff = pol.coefficients()
-        mon_coeff_dict = dict( zip( mon, coeff ))
-        for j in range(len(mon)):
-            cont = gensP.index( mon[j] )
-            M[cont,i] = mon_coeff_dict[mon[j]]
-
-    return M
-#-------------
+from sage.all import ZZ, Matrix, QQ, lcm, PolynomialRing, vector
+# from sage.rings.number_field.splitting_field import SplittingFieldAbort
 
 #-------------
 
-# the function implements the computation of the invariants given 
-# in Lemma 3.1 of Snobl and Winternitz for the Jordan block with 
+# the function implements the computation of the invariants given
+# in Lemma 3.1 of Snobl and Winternitz for the Jordan block with
 # zero eigenvaliue
 
 def invariants_nilpotent_jordan_block_lemma_3_1(gensF):
@@ -57,7 +24,7 @@ def invariants_nilpotent_jordan_block_lemma_3_1(gensF):
 
 #-------------
 def invariants_eigenvalue_jordan_block(gensF):
-    
+
     v = invariants_nilpotent_jordan_block_lemma_3_1(gensF)
     return [ v[i+1]/v[0]**(i+2) for i in range(len( v )-1)]
 #-------------
@@ -65,16 +32,19 @@ def invariants_eigenvalue_jordan_block(gensF):
 #-------------
 def invariants_diagonal(diag, gensF, K):
     len_diag = len(diag)
-    degree_K = K.polynomial().degree()
+    degree_K = K.absolute_polynomial().degree()
     for i in range(len_diag):
         diag[i] = K(diag[i])
     coeff = [0]*len_diag
     for i in range(len_diag):
-        coeff_diag = list(diag[i].polynomial())
-        if len(coeff_diag) < degree_K:
-            for j in range(degree_K-len(coeff_diag)):
-                coeff_diag = coeff_diag + [0]
-        coeff[i] = coeff_diag
+        if degree_K == 1:
+            coeff[i] = diag[i]
+        else:
+            coeff_diag = list(diag[i].polynomial())
+            if len(coeff_diag) < degree_K:
+                for j in range(degree_K-len(coeff_diag)):
+                    coeff_diag = coeff_diag + [0]
+            coeff[i] = coeff_diag
     sist_qq = Matrix(QQ, degree_K, len_diag)
     for i in range(len_diag):
         sist_qq[:,i] = vector(coeff[i])
@@ -105,16 +75,36 @@ def invariants_diagonal(diag, gensF, K):
 #-------------
 
 #-------------
+def extension_field_roots(f):
+    K = f.base_ring()
+    degree_f = f.degree()
+    f_fac = f.factor()
+    var_bool = True
+    cont = 0
+    while var_bool:
+        var_bool = False
+        for i in range(len(f_fac)):
+            if f_fac[i][0].degree() != 1:
+                K = K.extension(f_fac[i][0],'s'+str(cont))
+                f = f.change_ring(K)
+                f_fac = f.factor()
+                cont = cont + 1
+                var_bool = True
+                break
+    return K
+#-------------
+
+#-------------
 def invariants_matrix_derivation(diff):
     r'''
         INPUT:
-        
+
             - Derivation over a field of fractions defined from a matrix.
-            
+
         OUTPUT:
-            
+
             - List of algebraically independent generators of the rational invariant algebra of the derivation.
-            
+
         COMMENT:
 
         Given a square matrix M of size n x n, we can define a derivation D_{M} in the polynomial algebra in the variables x_{1}, \cdots, x_{n}, by setting D_{M} = \sum_{j=1}^{n}\sum_{i=1}^{n}D_{M}[i,j]D_{x_{i}}. From the Jordan matrix of D_{M}​, we determine the invariants of the rational function algebra of D_{M}​.
@@ -137,25 +127,28 @@ def invariants_matrix_derivation(diff):
     '''
     # Extending the matrix to a field where its Jordan form can be taken
     M = matrix_of_derivation(diff)
-    n = M.nrows()
+    F_ori = diff.parent().base()
+    gensF_ori = F_ori.gens()
     f = M.characteristic_polynomial()
-    K = f.splitting_field("a")
+    #K = extension_field_roots(f)
+    K = f.splitting_field('a')
     M = Matrix(K,M)
-    J, P = M.jordan_form(transformation=True)
+    J, P = M.jordan_form(transformation=True) 
     diff = derivation_of_matrix(M)
     D = diff.parent()
-    F = D.base()
-    gensF = list(F.gens())
+    F_alt = D.base()
+    gensF_alt = list(F_alt.gens())
+    dict_F = {gensF_alt[i]:gensF_ori[i] for i in range(len(gensF_alt))} 
     # Change of basis
-    gensAlt = [0]*len(gensF)
-    for j in range(len(gensF)):
-        for i in range(len(gensF)):
-            gensAlt[j] = gensAlt[j] + P[i,j]*gensF[i]
+    gensAlt = [0]*len(gensF_alt)
+    for j in range(len(gensF_alt)):
+        for i in range(len(gensF_alt)):
+            gensAlt[j] = gensAlt[j] + P[i,j]*gensF_alt[i]
     # Non-repeated eigenvalues
-    eigenVR = J.eigenvalues()
-    eigenV = [J.eigenvalues()[0]]
+    eigenVR = [J[k][k] for k in range(J.nrows())]
+    eigenV = [eigenVR[0]]
     cont = 0
-    for i in range(1,len(eigenVR)):
+    for i in range(1, len(eigenVR)):
         if eigenVR[i] != eigenV[cont]:
             eigenV = eigenV + [eigenVR[i]]
             cont = cont + 1
@@ -208,7 +201,7 @@ def invariants_matrix_derivation(diff):
                 inv = inv +  invariants_nilpotent_jordan_block_lemma_3_1(dateInv[i][1])
             else:
                 inv = inv + invariants_eigenvalue_jordan_block(dateInv[i][1])
-    if len(diag) > 1:
+    if len(diag) >= 1:
         inv = inv + invariants_diagonal(diag, gensDiag, K)
     if len(blockNotNil) == 0:
         if len(blockNil) > 1:
@@ -219,5 +212,6 @@ def invariants_matrix_derivation(diff):
             inv = inv + [dateInv[blockNotNil[0]][1][1]/dateInv[blockNotNil[0]][1][0] - dateInv[blockNil[j]][1][1]/dateInv[blockNil[j]][1][0]]
         for i in range(1,len(blockNotNil)):
             inv = inv + [dateInv[blockNotNil[i]][1][1]/dateInv[blockNotNil[i]][1][0] - dateInv[blockNil[0]][1][1]/dateInv[blockNil[0]][1][0]]
+    inv = [inv[j].subs(dict_F) for j in range(len(inv))]
     return inv
 #-------------
