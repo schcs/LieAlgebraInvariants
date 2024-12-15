@@ -1,217 +1,205 @@
-# Converts a list of rational functions to a list of polynomials. 
+# Converts a list of rational functions to a list of polynomials.
 #
-# We factorize the denominators and introduce a new variable in the place of 
-# each irreducible factor. 
+# We factorize the denominators and introduce a new variable in the place of
+# each irreducible factor.
 
-def rational_functions_to_pols( gens ):    
-    
-    primes_of_denoms = [] # the primes (irreducibles) appearing in the denominators
-    exponents_of_primes_in_denoms = []  # their exponents 
-    units = [] # this is the list of coefficients
-    
+from sage.all import QQ, PolynomialRing, prod, solve, symbolic_expression
+
+
+def rational_functions_to_pols(gens):
+
+    # the primes (irreducibles) appearing in the denominators
+    primes_of_denoms = []
+    exponents_of_primes_in_denoms = []  # their exponents
+    units = []  # this is the list of coefficients
+
     # get the parent pol ring
     P = gens[0].numerator().parent()
     F = P.base_ring()
-    n = len( P.gens())
-    
+    n = len(P.gens())
+
     # make sure that F is field
     if not F.is_field():
         F = F.fraction_field()
-         
+
     # is this line needed
     # P = P.change_ring(P.base_ring().fraction_field())
-    
-    # get the generators 
-    P_gens, nr_gens = P.gens(), len( gens )
 
     # let's build the data
     for g in gens:
         exps = []
         fact = g.denominator().factor()
         # append the constant term in the factorization into units
-        units.append( F( fact.unit()))
+        units.append(F(fact.unit()))
 
         for f in fact:
             # check if the factor f[0] has already appeared
             if f[0] in primes_of_denoms:
                 # find its index
                 # can this be done at the same time?
-                ind = primes_of_denoms.index( f[0] )
+                ind = primes_of_denoms.index(f[0])
                 # append the info into exps
-                exps.append( (ind, f[1]) )
+                exps.append((ind, f[1]))
             else:
                 # f[0] hasn't yet appeared
-                primes_of_denoms.append( f[0])
+                primes_of_denoms.append(f[0])
                 # append to exps
-                exps.append( (len(primes_of_denoms)-1, f[1] ))
+                exps.append((len(primes_of_denoms) - 1, f[1]))
         # append exps to the list of exponent vectors
-        exponents_of_primes_in_denoms.append( exps )    
-    
-    # define new polynomial ring
-    P1 = PolynomialRing( F, n + len( primes_of_denoms), 'xx' )
-    
-    # this will be the list 
-    new_gens = [ P1.zero()]*nr_gens
-    
-    # this is a substitution in which we substitute the gens of P1 into the gens of P
-    subs = { P.gens()[k]: P1.gens()[k] for k in range( n )}
+        exponents_of_primes_in_denoms.append(exps)
 
-    for i in range( nr_gens ):
+    # define new polynomial ring
+    P1 = PolynomialRing(F, n + len(primes_of_denoms), 'xx')
+
+    # this will be the list
+    nr_gens = len(gens)
+    new_gens = [P1.zero()] * nr_gens
+
+    # this is a substitution in which we substitute the gens of P1 into the
+    # gens of P
+    subs = {P.gens()[k]: P1.gens()[k] for k in range(n)}
+
+    for i in range(nr_gens):
         g = gens[i]
         # substitute the enumerators
-        g1 = P(g.numerator()).subs( subs )
+        g1 = P(g.numerator()).subs(subs)
         # multiply with the denom
-        g1 *= (units[i]**-1)*prod( [ (P1.gens()[n+ex[0]])**ex[1] for ex in exponents_of_primes_in_denoms[i] ])
+        g1 *= (units[i]**-1) * prod([(P1.gens()[n + ex[0]])**ex[1]
+                                     for ex in exponents_of_primes_in_denoms[i]])
         new_gens[i] = g1
 
-    for i in range( len( primes_of_denoms )):
+    for i in range(len(primes_of_denoms)):
         p = P(primes_of_denoms[i])
-        pp = p.subs( subs )
-        new_gens[nr_gens+i] = pp*P1.gens()[n+i]-1
+        pp = p.subs(subs)
+        new_gens[nr_gens + i] = pp * P1.gens()[n + i] - 1
 
-    return new_gens  
+    return new_gens
 
-#-------------
-def alg_dependence( gens ):
-    r''' 
-    INPUT: 
-        
-        - list of polynomials in multivariate polynomial ring
-    
-    OUTPUT: 
-    
-        - Groebner basis for the ideal of polynomials that give zero if the elements of gens are subtituted.
-    
-    EXAMPLES:
-    
-        sage: gens[0]*gens[1]+gens[1]*gens[2]-gens[0]
+# -------------
 
-        x0^2*x1 - x0^2*x2 - x0^2 + x1*x2*x3 - x2^2*x3
 
+def alg_dependence(gens):
+    r'''
+    INPUT:
+
+    - list of polynomials in multivariate polynomial ring
+
+    OUTPUT:
+
+    - Groebner basis for the ideal of polynomials that give zero if the
+      elements of gens are substituted.
+
+    EXAMPLES::
+
+        sage: R = PolynomialRing(QQ, 'x', 4)
+        sage: x0,x1,x2,x3 = R.gens()
         sage: gens = [x0^2,x1-x2,x2*x3,x0^2*x1 - x0^2*x2 - x0^2 + x1*x2*x3 - x2^2*x3]
-
-        sage: dep = alg_dependence( gens )
-
-        sage: dep
-
-        [t0*t1 - t0 + t1*t2 - t3]
-
+        sage: dep = alg_dependence( gens ); dep
+        [t0*t1 + t1*t2 - t0 - t3]
         sage: dep[0].subs( t0=gens[0],t1=gens[1],t2=gens[2], t3 = gens[3] )
-
         0
-        
     '''
-    P = gens[0].parent()
-    P_gens = P.gens()
-    nr_gens = len(gens)
-    n = len(P.gens())
-    F = P.base_ring()
+    P = gens[0].parent()   # the underlying pol ring
+    P_gens = P.gens()      # the generators of P
+    nr_gens = len(gens)    # number of gens of ideal
+    n = len(P.gens())      # number of gens of P
+    F = P.base_ring()      # underlying field
 
-    R = PolynomialRing( F, n+nr_gens, 'z' )
+    # we introduce a new poly ring with one generator to each
+    # generator of P and an additional generator for each generator in gens
+    R = PolynomialRing(F, n + nr_gens, 'z')
     rgens = R.gens()
 
-    rxgens, rzgens = rgens[0:n], rgens[n:n+nr_gens]
-    idgens = [ gens[i].subs( { P_gens[j]: rxgens[j] for j in range(n)}) - 
-                        rzgens[i] for i in range( nr_gens )]
+    # we separate the generators of R into two two types as above
+    rxgens, rzgens = rgens[0:n], rgens[n:n + nr_gens]
 
-    I = R.ideal( idgens )
-    gr = I.groebner_basis()
-    
-    n_zeros = tuple( 0 for _ in range( n ))
-    #return gr, n, n_zeros
-    cent_gens = [ g for g in gr if g.degrees()[0:n] == n_zeros ]
-    #return cent_gens
+    # we create the list that contains elements of the form gens[i] - z_i
+    # where z_i is the ith generator of the second type introduced for R
+    idgens = [gens[i].subs({P_gens[j]: rxgens[j] for j in range(n)}) -
+              rzgens[i] for i in range(nr_gens)]
 
-    R1 = PolynomialRing( F, nr_gens, 't', order = "invlex" ) ### check if the right order is used
-    values = { R.gens()[i]: 0 for i in range( n )}
-    values.update( { R.gens()[i+n]: R1.gens()[i] for i in range( nr_gens )})
-    new_gens = [ x.subs( values ) for x in cent_gens ]
-    
-    return R1.ideal( new_gens ).groebner_basis()
-    
-#-------------
+    # define the ideal generated by idgens
+    dep_ideal = R.ideal(idgens)
 
-#-------------
-def is_element_of_subalgebra( gens, p ):
+    # we calculate the elimination ideal with respect to the generators
+    # of the first kind see
+    # https://pi.math.cornell.edu/~dmehrle/notes/old/alggeo/18Elimination.pdf
+    # for the use of elimination ideal in such situations
+    elim_id = dep_ideal.elimination_ideal(rxgens)
+    if elim_id.is_zero():
+        return 0
+    else:
+        Pt = PolynomialRing(QQ, nr_gens, 't')
+        # vars = var ( ''.join( [f't{i},' for i in range(nr_gens)]))
+        subs_values = tuple(0 for _ in range(n)) + Pt.gens()
+        subs_dict = dict(zip(R.gens(), subs_values))
+        return [x.subs(subs_dict) for x in elim_id.gens()]
+
+# -------------
+
+
+def is_element_of_subalgebra(gens, p):
     '''
-        INPUT:
-        
-            - a list of polynomials `gens`
-            - a polynomial `p`
-            
-        OUTPUT:
-            
-            - true/false depending on whether p lies in the algebra generated by gens
-            - in case of true, returns a polynomial r such that r( gens ) == p 
+    INPUT:
 
-        Finds if the polynomial `p` lies in the algebra generated by gens.
-        
-        EXAMPLES:
-        
-            sage: gens = [x0^2,x1-x2,x2*x3]
+    - a list of polynomials `gens`
+    - a polynomial `p`
 
-            sage: p = x0^2*x1 - x0^2*x2 - x0^2 + x1*x2*x3 - x2^2*x3
+    OUTPUT:
 
-            sage: v, dep = is_element_of_subalgebra( gens, p )
+    - true/false depending on whether p lies in the algebra generated by gens
+    - in case of true, returns a polynomial r such that r( gens ) == p
 
-            sage: v
+    Finds if the polynomial `p` lies in the algebra generated by gens.
 
-            True
+    EXAMPLES::
 
-            sage: dep
-
-            [t0*t1 - t0 + t1*t2]
-
-            sage: dep[0].subs( t0=gens[0],t1=gens[1],t2=gens[2] ) == p
-
-            True
+        sage: R = PolynomialRing(QQ, 'x', 4)
+        sage: x0,x1,x2,x3 = R.gens()
+        sage: gens = [x0^2,x1-x2,x2*x3]
+        sage: p = x0^2*x1 - x0^2*x2 - x0^2 + x1*x2*x3 - x2^2*x3
+        sage: v, dep = is_element_of_subalgebra( gens, p )
+        sage: v
+        True
+        sage: dep
+        [t0*t1 + t1*t2 - t0]
+        sage: dep[0].subs( t0=gens[0],t1=gens[1],t2=gens[2] ) == p
+        True
     '''
+    F = gens[0].base_ring()
+    gens_new = rational_functions_to_pols(gens + [p])
+    nr_fake_gens = len(gens_new) - len(gens)
+    deps = alg_dependence(gens_new)
+    print( deps )
+    d = len(gens)
 
-    gens_new = rational_functions_to_pols( gens + [p] ); 
-    nr_fake_gens = len( gens_new ) - len( gens )
-    #print( "new_gens are ", gens_new )
-    #return gens_new
-    deps = alg_dependence( gens_new ); 
-    #return deps 
-    d = len( gens )
-    
-    if len( deps ) == 0:
-        return false, _
-    
-    R = deps[0].parent()
-    R_gens = [ x for x in R.gens()[0:len(gens)+1]]
-    R_gens += [ 0 for _ in range( nr_fake_gens-1 )]
-    r_subs = { R.gens()[i]: R_gens[i] for i in range( len( R.gens()))}
-    deps = [ x for x in deps if R.gens()[d] in x.monomials() ]; 
+    if len(deps) == 0:
+        return False, None
 
-    if len( deps ) == 0:
-        return false, []
+    p_var = deps[0].variables()[-1]
+    deps = [x for x in deps if x.degree(p_var) == 1]
+    if len(deps) == 0:
+        return False, None
 
-    #return deps
-    deps = [ d.subs( r_subs ) for d in deps ]; 
-    
-    coeffs = [ x.coefficient( R.gens()[d] ) for x in deps ]
-    deps = [ -(coeffs[k]**-1)*deps[k] for k in range( len( deps )) ]
-    
-    #print( deps )
+    dep = deps[0]
+    Pt = PolynomialRing(QQ, len(gens) + 1, 't')
+    dep_symb = symbolic_expression(dep)
+    p_var_symb = symbolic_expression(p_var)
+    symb_sol = solve(dep_symb, p_var_symb)[0].rhs()
+    print( symb_sol )
+    return True, [Pt(symb_sol)]
 
-    expressions = [ deps[i] + (R.gens()[d]) for i in range( len( deps )) ]
+# -----------------------
 
-    degR = len( R.gens())
-    R0 = PolynomialRing( QQ, len(gens), [ str( R.gens()[x] ) for x in range( len(gens))])
+# TO BE DOCUMENTED
 
-    #return expressions
-    return true, [ R0( x ) for x in expressions ]
-
-
-def is_element_of_subalgebra_localization( gens, p, q, nr_tries = 100 ):
+def is_element_of_subalgebra_localization(gens, p, q, nr_tries=100):
 
     k = 0
     while k <= nr_tries:
-        v, h = is_element_of_subalgebra( gens, p*q**k )
+        v, h = is_element_of_subalgebra(gens, p * q**k)
         if v:
-            return h[0], k 
+            return h[0], k
         k += 1
 
-    return false
-#-------------
+    return False
