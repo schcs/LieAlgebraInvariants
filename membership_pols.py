@@ -166,13 +166,8 @@ def is_element_of_subalgebra(gens, p):
         sage: dep[0].subs( t0=gens[0],t1=gens[1],t2=gens[2] ) == p
         True
     '''
-
-    F = gens[0].base_ring()
     gens_new = rational_functions_to_pols(gens + [p])
-    nr_fake_gens = len(gens_new) - len(gens)
     deps = alg_dependence(gens_new)
-    print( deps )
-    d = len(gens)
 
     if len(deps) == 0:
         return False, None
@@ -187,12 +182,13 @@ def is_element_of_subalgebra(gens, p):
     dep_symb = symbolic_expression(dep)
     p_var_symb = symbolic_expression(p_var)
     symb_sol = solve(dep_symb, p_var_symb)[0].rhs()
-    print( symb_sol )
     return True, [Pt(symb_sol)]
 
 # -----------------------
 
 # TO BE DOCUMENTED
+# NOT CURRENTLY USED
+
 
 def is_element_of_subalgebra_localization(gens, p, q, nr_tries=100):
 
