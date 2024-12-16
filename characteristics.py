@@ -1,4 +1,4 @@
-from sage.all import SR, function, diff
+from sage.all import SR, function, diff, PolynomialRing, QQ, desolve_system
 """
 using the sage solver:
 
@@ -12,11 +12,10 @@ sage: system4 = equations_from_differential_operator( d ); system4
  (c0(t), c1(t), c2(t), c3(t)))
 sage: desolve_system(*system4, [0,1,2,3,1])
 [c0(t) == e^t, c1(t) == 2*e^t, c2(t) == 3*e^t, c3(t) == 1]
-
-
 """
 
-def equations_from_differential_operator( d_op ):
+
+def equations_from_differential_operator(d_op):
     '''
         INPUT:
 
@@ -24,7 +23,8 @@ def equations_from_differential_operator( d_op ):
 
         OUTPUT:
 
-            - The differential equations that determine the integral curves that correspond to d_op.
+            - The differential equations that determine the integral curves 
+              that correspond to d_op.
 
         COMMENT:
 
@@ -32,13 +32,14 @@ def equations_from_differential_operator( d_op ):
 
             p_0(x)*d/dx0 + ... + p_k(x)*d/dxk,
 
-            a curve is said to be an integral curve if it is tangent to the vector field (p_0....,p(k)).
-            These integral curves are determined by the system of differential equations
+            a curve is said to be an integral curve if it is tangent to the
+            vector field (p_0....,p(k)). These integral curves are determined
+            by the system of differential equations
 
             d/dt(c_i(t)) = p_i(c_1,...,c_k) for i=1,...,k.
 
-            Thus function returns these equations and also the list of functions c_i that appear in the
-            equations.
+            Thus function returns these equations and also the list of 
+            functions c_i that appear in the equations.
 
             The equations are returned as symbolic expressions.
 
@@ -56,58 +57,24 @@ def equations_from_differential_operator( d_op ):
     '''
     # find the coefficients of d_op
     coeffs = d_op.list()
-    l = len(coeffs)
+    nr_coeffs = len(coeffs)
 
     # t is the variable of the curve
     t = SR.var('t')
 
     # build the list of functions c0,...,ck where k = l-1
-    c_funcs = tuple(function(f'c{k}')(t) for k in range(l))
+    c_funcs = tuple(function(f'c{k}')(t) for k in range(nr_coeffs))
 
     # the rhs of the equations is obtained by substituting
     # c_funcs into the coeffs of d_opo
     rhs_eqs = [c(c_funcs) for c in coeffs]
 
     # return c_funcs, rhs_eqs
-    return [diff(c_funcs[k], t) == rhs_eqs[k] for k in range(l)], c_funcs
+    return [diff(c_funcs[k], t) == rhs_eqs[k]
+            for k in range(nr_coeffs)], c_funcs
 
 
-def desolve_system_alt( rhss, t, func_c, P ):
-    """
-    examples !
-
-    sage:       sage: x = var('x')
-    ....:       sage: y = function('y')(x)
-    ....:       sage: de = diff(y,x) - y == 0
-    ....:       sage: desolve(de, y, [0,1])
-    e^x
-
-    """
-    nr_eqs = len( rhss )
-    gensP = P.gens()
-
-    sols = []
-    seen_non_zero = False
-    kP = 0
-    for k in range( nr_eqs ):
-        expr = rhss[k]
-
-        if not seen_non_zero and expr != 0:
-            add_term = 0
-            seen_non_zero = True
-        else:
-            add_term = gensP[kP]
-            kP += 1
-
-        sol = expr.integral(t) + add_term
-        sols.append( sol )
-        for j in range( k+1, nr_eqs ):
-            rhss[j] = rhss[j].subs( func_c[k] == sol )
-
-    return [ P( x ) for x in sols ]
-
-
-def integral_curves( d_op ):
+def integral_curves(d_op):
     '''
         INPUT:
 
@@ -126,47 +93,35 @@ def integral_curves( d_op ):
 
     '''
     # the number of generators of P
-    nr_gens = len( d_op.domain().gens())
+    nr_gens = len(d_op.domain().gens())
     v = d_op.list()
-    first_non_zero = next( i for i in range( len( v )) if v[i] != 0 )
+    first_non_zero = next(i for i in range(len(v)) if v[i] != 0)
     P0 = d_op.domain()
-    namesP = [ 'y_'+str(P0.gens()[x]) for x in range( nr_gens ) if x != first_non_zero ] + [ 't' ]
+    namesP = [str(P0.gens()[x]) for x in range(nr_gens) if
+              x != first_non_zero] + ['t']
 
-    P = PolynomialRing( QQ, nr_gens, namesP )
-    t = P.gens()[P.ngens()-1]
+    P = PolynomialRing(QQ, nr_gens, namesP)
     # build the list of equations and the list of functions for d_op
-    eqs, c_funcs = equations_from_differential_operator( d_op )
+    eqs, c_funcs = equations_from_differential_operator(d_op)
 
     # we need initial condition
-    if eqs[first_non_zero].rhs().coefficient( c_funcs[first_non_zero] ) == 0:
-        # nilpotent case
-        init_k = 0
-    else:
-        # semisimple case
-        init_k = 1
+    init_k = 0
 
-    init_cond = [0] + [ P.gens()[k] for k in range( nr_gens -1 )]
-    init_cond.insert( first_non_zero+1, init_k )
-
-    # sols = desolve_system_alt( [ x.rhs() for x in eqs ], t, c_funcs, P )
-
-    sols = desolve_system(eqs, c_funcs, init_cond)
-
-    # substitute e^t with t. Check if this is valid!!!
-    sols = [ x.rhs().subs( { e**t: t } ) for x in sols ]
-    return [ P(x) for x in sols ]
+    init_cond = [0] + [P.gens()[k] for k in range(nr_gens-1)]
+    init_cond.insert(first_non_zero+1, init_k)
+    return desolve_system(eqs, c_funcs, init_cond)
 
 
-def invert_curves( int_curve, P0 ):
+def invert_curves(int_curve, P0):
 
     P = int_curve[0].parent()
-    nr_vars = len( P.gens())
+    nr_vars = len(P.gens())
     t = P.gens()[-1]
 
     first_with_t = next( c for c in int_curve if c != 0 and c % t == 0 )
     q = first_with_t / t
 
-    ims = [ is_element_of_subalgebra_localization( int_curve, y, q ) for y in [q] + [ x for x in P.gens() ]]
+    ims = [is_element_of_subalgebra_localization(int_curve, y, q) for y in [q] + [ x for x in P.gens() ]]
     ims_new = [ ims[k][0]/ims[0][0]**ims[k][1] for k in range( 1, len( ims ))]
     Pims = ims_new[0].parent()
     substitution = { Pims.gens()[i]: P0.gens()[i] for i in range( nr_vars )}
