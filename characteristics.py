@@ -1,4 +1,4 @@
-from sage.all import SR, function, diff, PolynomialRing, QQ, desolve_system
+from sage.all import SR, function, diff, PolynomialRing, QQ, desolve_system, var
 """
 using the sage solver:
 
@@ -40,7 +40,7 @@ def equations_from_differential_operator(d_op):
 
             Thus function returns these equations and also the list of 
             functions c_i that appear in the equations.
-
+/2*t^2*x1
             The equations are returned as symbolic expressions.
 
         EXAMPLES::
@@ -107,87 +107,60 @@ def integral_curves(d_op):
     # we need initial condition
     init_k = 0
 
-    init_cond = [0] + [P.gens()[k] for k in range(nr_gens-1)]
-    init_cond.insert(first_non_zero+1, init_k)
+    init_cond = [0] + [P0.gens()[k] for k in range(nr_gens)]
+    print( init_cond)
+    #init_cond.insert(first_non_zero+1, init_k)
     return desolve_system(eqs, c_funcs, init_cond)
 
 
-def invert_curves(int_curve, P0):
+def generators_of_kernel(d_op):
+    r"""
 
-    P = int_curve[0].parent()
-    nr_vars = len(P.gens())
-    t = P.gens()[-1]
-
-    first_with_t = next( c for c in int_curve if c != 0 and c % t == 0 )
-    q = first_with_t / t
-
-    ims = [is_element_of_subalgebra_localization(int_curve, y, q) for y in [q] + [ x for x in P.gens() ]]
-    ims_new = [ ims[k][0]/ims[0][0]**ims[k][1] for k in range( 1, len( ims ))]
-    Pims = ims_new[0].parent()
-    substitution = { Pims.gens()[i]: P0.gens()[i] for i in range( nr_vars )}
-    return [ x.subs( substitution ) for x in ims_new ]
-
-
-def field_isomorphism_from_curves( int_curve, P, domainF ):
-
-    nr_gens = len( P.gens())
-
-    t = int_curve[0].parent().gens()[nr_gens-1]
-    inv_c = invert_curves( int_curve, P )
-
-    fhom = domainF.hom( inv_c[0:len(inv_c)-1] )
-
-    return fhom
-
-def field_isomorphism_from_differential_operator( d ):
-
-    F0 = d.parent().base_ring()
-    nr_gens = len( F0.gens())
-    v = d.list()
-    first_non_zero = next( i for i in range( len( v )) if v[i] != 0 )
-    domainF = PolynomialRing( QQ, nr_gens - 1,
-                    [str(F0.gens()[x]) for x in range( nr_gens ) if x != first_non_zero]).fraction_field()
-
-    curves = integral_curves( d )
-    return field_isomorphism_from_curves( curves, F0, domainF )
+    """
+    curves = [c.rhs() for c in integral_curves(d_op)]
+    t = var('t')
+    gens_P = d_op.domain().gens()
+    rank = len(gens_P)
+    # k is the least number such that the coefficient of d_op for the 
+    # k-th variable is non-zero
+    d_op_mon_coeffs = d_op.monomial_coefficients()
+    d_op_coeffs = d_op.list()
+    k = min(d_op_mon_coeffs.keys())
+    xk, fk = gens_P[k], d_op_mon_coeffs[k]
+    subs_dict = dict(zip(gens_P, curves))
+    Fs = [x.subs(subs_dict).integral(t) for x in d_op_coeffs]
+    kernel_gens = [Fs[i].subs(t=-xk/fk)+gens_P[i] for i in range(rank) if i != k]
+    return kernel_gens
 
 
-def rational_invariant_field( l ):
+def rational_invariant_field(lie_alg):
 
-    d = l.dimension()
-    P = PolynomialRing( QQ, d, [ str( x ) for x in l.basis() ])
+    d = lie_alg.dimension()
+    P = PolynomialRing(QQ, d, [str(x) for x in lie_alg.basis()])
 
-    gens = [ x for x in P.gens()]
-    bas = [ x for x in l.basis() ]
+    gens = [x for x in P.gens()]
+    bas = [x for x in lie_alg.basis()]
 
-    for i in range( d ):
-
-        d = differential_operator( l, bas[i] )
-        coeffs = [0]*len( gens )
-        for k in range( len( gens )):
+    for i in range(d):
+        d = differential_operator(lie_alg, bas[i])
+        coeffs = [0]*len(gens)
+        for k in range(len(gens)):
             d_gen = d(gens[k])
             if d_gen == 0:
                 coeffs[k] = 0
             else:
-                print( "k is ", k )
-                print( "i is", i, "gens are ", gens[0:k], "pol is", d_gen )
-                v, cs = is_element_of_subalgebra( gens[0:k], d_gen )
+                v, cs = is_element_of_subalgebra(gens[0:k],d_gen)
                 assert v
                 coeffs[k] = cs[0]
+        
 
-        print( coeffs )
-
-        #coeffs = [ is_element_of_subalgebra( gens[0:k], d(gens[k]) )[1][0] for k in range( len( gens ))]
-
-        print( i, d )
-
-        Pt = PolynomialRing( QQ, len( gens ), ['t'+str(i) for i in range( len( gens ))])
-        dt = differential_operator_from_coeffs( Pt, coeffs )
+        Pt = PolynomialRing( QQ, len(gens), ['t'+str(i) for i in range(len(gens))])
+        dt = differential_operator_from_coeffs(Pt, coeffs)
 
         if dt == 0:
             continue
 
-        h  = field_isomorphism_from_differential_operator( dt )
+        h  = field_isomorphism_from_differential_operator(dt)
 
         substitution = { h.codomain().gens()[i]: gens[i] for i in range( len( gens )) }
 
