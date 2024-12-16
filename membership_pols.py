@@ -166,6 +166,7 @@ def is_element_of_subalgebra(gens, p):
         sage: dep[0].subs( t0=gens[0],t1=gens[1],t2=gens[2] ) == p
         True
     '''
+
     F = gens[0].base_ring()
     gens_new = rational_functions_to_pols(gens + [p])
     nr_fake_gens = len(gens_new) - len(gens)
@@ -203,3 +204,6 @@ def is_element_of_subalgebra_localization(gens, p, q, nr_tries=100):
         k += 1
 
     return False
+
+
+
