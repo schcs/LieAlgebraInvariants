@@ -205,6 +205,7 @@ def get_derivation_on_generator(diff, param):
         dict_param = {F.gens()[i]:param[i] for i in range(len(param))}
         return diff, dict_param
     if len(non_zero) == 1:
+        print(coeff[non_zero[0]])
         R = param[0].parent().base_ring()
         P = PolynomialRing(R, len(param), "t")
         F = FractionField(P)
