@@ -78,6 +78,19 @@ def differential_operator(L, x, leading_char='x'):
     return sum(F(L.bracket(x, y))*F.derivation(F(str(y))) for y in bas)
 
 
+def differential_operator_from_coeffs(P, coeffs):
+    r"""
+    """
+
+    D = P.derivation_module()
+    op = D.zero()
+    
+    for k in range(len(coeffs)): 
+        op += coeffs[k]*D.gens()[k]
+
+    return op
+
+
 
 def derivation_kernel(d, phi=0):
     r'''

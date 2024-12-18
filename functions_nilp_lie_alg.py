@@ -458,10 +458,12 @@ def lie_algebra_upper_triangular_matrices(n, strict=False):
     # the first matrix has 1 at position i, j; the second has 1 at position k,l
     # this lambda function returns the position where the product has one;
     # of no such position exists, then the output is ()
-    prod_func = lambda i,j,k,l: (j==k)*(i,l)
+    def prod_func(i, j, k, m):
+        return (j == k) * (i, m)
 
     # the standard basis is labelled as xij where i, j indicates the non-zero entry
-    basis_labels = [(i+1,j+1) for i in range( n ) for j in range( i, n )]
+    basis_labels = [(i+1,j+1) for i in range(n) 
+                    for j in range(i+1 if strict else i, n)]
 
     # we sort the basis labels so that they correspond to the derived series of L
     # this helps in the invariant field computation

@@ -94,22 +94,13 @@ def integral_curves(d_op):
     '''
     # the number of generators of P
     nr_gens = len(d_op.domain().gens())
-    v = d_op.list()
-    first_non_zero = next(i for i in range(len(v)) if v[i] != 0)
     P0 = d_op.domain()
-    namesP = [str(P0.gens()[x]) for x in range(nr_gens) if
-              x != first_non_zero] + ['t']
 
-    P = PolynomialRing(QQ, nr_gens, namesP)
     # build the list of equations and the list of functions for d_op
     eqs, c_funcs = equations_from_differential_operator(d_op)
 
     # we need initial condition
-    init_k = 0
-
     init_cond = [0] + [P0.gens()[k] for k in range(nr_gens)]
-    print( init_cond)
-    #init_cond.insert(first_non_zero+1, init_k)
     return desolve_system(eqs, c_funcs, init_cond)
 
 
@@ -121,7 +112,7 @@ def generators_of_kernel(d_op):
     t = var('t')
     gens_P = d_op.domain().gens()
     rank = len(gens_P)
-    # k is the least number such that the coefficient of d_op for the 
+    # k is the least number such that the coefficient of d_op for the
     # k-th variable is non-zero
     d_op_mon_coeffs = d_op.monomial_coefficients()
     d_op_coeffs = d_op.list()
@@ -135,78 +126,56 @@ def generators_of_kernel(d_op):
 
 def rational_invariant_field(lie_alg):
 
+    # get the dimension of the Lie algebra and construct its 
+    # polynomial algebra 
     d = lie_alg.dimension()
     P = PolynomialRing(QQ, d, [str(x) for x in lie_alg.basis()])
 
+    # lists of generators for P and list of basis for lie_alg
     gens = [x for x in P.gens()]
     bas = [x for x in lie_alg.basis()]
+    denoms = set({})
 
+    # do the following computation for each basis element of lie_alg
     for i in range(d):
-        d = differential_operator(lie_alg, bas[i])
+        # di is the current differential operator
+        di = differential_operator(lie_alg, bas[i])
+
+        # compute the current differential operator
+        # in terms of the current generating set. 
+        # initialize the coffs with zero-vector
         coeffs = [0]*len(gens)
         for k in range(len(gens)):
-            d_gen = d(gens[k])
+            # apply di to gens[k]
+            d_gen = di(gens[k])
+
+            # write d_gen as polynomial in the earlier generators
             if d_gen == 0:
                 coeffs[k] = 0
             else:
+                print(d_gen, gens[0:k], denoms)
                 v, cs = is_element_of_subalgebra(gens[0:k],d_gen)
                 assert v
                 coeffs[k] = cs[0]
         
-
+        # construct the differential operator in terms of the current gens
+        # the indeterminates are gonna be t1,...,tk where k is #gens
         Pt = PolynomialRing( QQ, len(gens), ['t'+str(i) for i in range(len(gens))])
         dt = differential_operator_from_coeffs(Pt, coeffs)
 
         if dt == 0:
             continue
+        
+        # compute generators for the kernel of dt 
+        dt_kernel_gens = generators_of_kernel(dt)
+        newdenoms = {Pt(x.denominator()) for x in dt_kernel_gens
+                     if x.denominator() != 1}
+        dt_kernel_gens = [Pt(x.numerator()) for x in dt_kernel_gens]
+        
+        # dictionary for substitution
+        substitution = {Pt.gens()[i]: gens[i] for i in range(len(gens))}
+        gens = [dt_k.subs(substitution) for dt_k in dt_kernel_gens]
+        denoms = denoms.union({den.subs(substitution) for den in newdenoms})
+        # gens = reduce_gen_set(gens)
 
-        h  = field_isomorphism_from_differential_operator(dt)
-
-        substitution = { h.codomain().gens()[i]: gens[i] for i in range( len( gens )) }
-
-        gens = [ h(x).subs( substitution ) for x in h.domain().gens() ]
-        gens = [ x.numerator() for x in gens ]
-
-    return gens
-
-
-def rational_invariant_field_2( l ):
-
-    d = l.dimension()
-    P = PolynomialRing( QQ, d, [ str( x ) for x in l.basis() ])
-
-    gens = [ x for x in P.gens()]
-    bas = [ x for x in l.basis() ]
-
-    m = structure_constants( l, l.basis()).rref()
-
-    for i in range( m.nrow ):
-
-        r = m[i]*lcm( x.denominator() for x in m[i] )
-        r = ( P(x) for x in r )
-
-        d = differential_operator_with_coeffs( P, r )
-        print( i, d )
-        coeffs = [ is_element_of_subalgebra( gens[0:k], d(gens[k]) )[1][0] for k in range( len( gens ))]
-
-        Pt = PolynomialRing( QQ, len( gens ), ['t'+str(i) for i in range( len( gens ))])
-        dt = differential_operator_from_coeffs( Pt, coeffs )
-
-        if dt == 0:
-            continue
-
-        h  = field_isomorphism_from_differential_operator( dt )
-
-        substitution = { h.codomain().gens()[i]: gens[i] for i in range( len( gens )) }
-
-        gens = [ h(x).subs( substitution ) for x in h.domain().gens() ]
-        gens = [ x.numerator() for x in gens ]
-
-    return gens
-    p = l.polynomialRing
-
-    for i in range( m.nrows()):
-        r = m[i]*lcm( x.denominator() for x in m[i] )
-        r = ( P(x) for x in r )
-
-
+    return gens, denoms
