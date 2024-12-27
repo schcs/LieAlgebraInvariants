@@ -75,7 +75,7 @@ def differential_operator(L, x, leading_char='x'):
 
     # now construct the differential operator
     bas = L.basis()
-    return sum(F(L.bracket(x, y))*F.derivation(F(str(y))) for y in bas)
+    return sum(P(L.bracket(x, y))*P.derivation(P(str(y))) for y in bas)
 
 
 def differential_operator_from_coeffs(P, coeffs):

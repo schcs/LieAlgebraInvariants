@@ -1,4 +1,12 @@
 from sage.all import SR, function, diff, PolynomialRing, QQ, desolve_system, var
+from sage.algebras.lie_algebras.structure_coefficients import LieAlgebraWithStructureCoefficients
+from sage.rings.derivation import RingDerivationWithoutTwist
+from invariants_nilp_lie_alg import differential_operator, differential_operator_from_coeffs
+from membership_pols import is_element_of_subalgebra
+
+lie_algebra_type = LieAlgebraWithStructureCoefficients
+derivation_type = RingDerivationWithoutTwist
+
 """
 using the sage solver:
 
@@ -23,7 +31,7 @@ def equations_from_differential_operator(d_op):
 
         OUTPUT:
 
-            - The differential equations that determine the integral curves 
+            - The differential equations that determine the integral curves
               that correspond to d_op.
 
         COMMENT:
@@ -38,7 +46,7 @@ def equations_from_differential_operator(d_op):
 
             d/dt(c_i(t)) = p_i(c_1,...,c_k) for i=1,...,k.
 
-            Thus function returns these equations and also the list of 
+            Thus function returns these equations and also the list of
             functions c_i that appear in the equations.
 /2*t^2*x1
             The equations are returned as symbolic expressions.
@@ -104,6 +112,10 @@ def integral_curves(d_op):
     return desolve_system(eqs, c_funcs, init_cond)
 
 
+def integral_curves_triangular_derivation(d_op):
+    pass
+
+
 def generators_of_kernel(d_op):
     r"""
 
@@ -120,31 +132,43 @@ def generators_of_kernel(d_op):
     xk, fk = gens_P[k], d_op_mon_coeffs[k]
     subs_dict = dict(zip(gens_P, curves))
     Fs = [x.subs(subs_dict).integral(t) for x in d_op_coeffs]
-    kernel_gens = [Fs[i].subs(t=-xk/fk)+gens_P[i] for i in range(rank) if i != k]
+    kernel_gens = [Fs[i].subs(t=-xk/fk)+gens_P[i] for i in range(rank)
+                   if i != k]
     return kernel_gens
 
 
-def rational_invariant_field(lie_alg):
+def inject_pol_ring(lie_alg):
+    lie_alg.polynomialRing = PolynomialRing(QQ, lie_alg.dimension(),
+                                            list(lie_alg.basis())[::-1],
+                                            order="lex")
+    lie_alg.fractionField = lie_alg.polynomialRing.fraction_field()
 
-    # get the dimension of the Lie algebra and construct its 
-    # polynomial algebra 
-    d = lie_alg.dimension()
-    P = PolynomialRing(QQ, d, [str(x) for x in lie_alg.basis()])
+
+def rational_invariant_field(self):
+
+    # get the dimension of the Lie algebra and construct its
+    # polynomial algebra
+    d = self.dimension()
+    if True or not hasattr(self, "polynomialRing"):
+        inject_pol_ring(self)
+    P = self.polynomialRing
 
     # lists of generators for P and list of basis for lie_alg
-    gens = [x for x in P.gens()]
-    bas = [x for x in lie_alg.basis()]
-    denoms = set({})
+    gens = P.gens()[::-1]
+    bas = [x for x in self.basis()]
+    denoms = []
 
     # do the following computation for each basis element of lie_alg
     for i in range(d):
         # di is the current differential operator
-        di = differential_operator(lie_alg, bas[i])
+        di = differential_operator(self, bas[i])
 
         # compute the current differential operator
-        # in terms of the current generating set. 
+        # in terms of the current generating set.
         # initialize the coffs with zero-vector
         coeffs = [0]*len(gens)
+        Pt = PolynomialRing(QQ, len(gens), ['t'+str(i)
+                            for i in range(len(gens))])
         for k in range(len(gens)):
             # apply di to gens[k]
             d_gen = di(gens[k])
@@ -153,29 +177,45 @@ def rational_invariant_field(lie_alg):
             if d_gen == 0:
                 coeffs[k] = 0
             else:
-                print(d_gen, gens[0:k], denoms)
-                v, cs = is_element_of_subalgebra(gens[0:k],d_gen)
+                v, cs = _is_element_of_subalgebra(gens[0:k], denoms, d_gen)
                 assert v
-                coeffs[k] = cs[0]
-        
+                coeffs[k] = Pt(cs[0].numerator())
+
         # construct the differential operator in terms of the current gens
         # the indeterminates are gonna be t1,...,tk where k is #gens
-        Pt = PolynomialRing( QQ, len(gens), ['t'+str(i) for i in range(len(gens))])
         dt = differential_operator_from_coeffs(Pt, coeffs)
 
         if dt == 0:
             continue
-        
-        # compute generators for the kernel of dt 
-        dt_kernel_gens = generators_of_kernel(dt)
-        newdenoms = {Pt(x.denominator()) for x in dt_kernel_gens
-                     if x.denominator() != 1}
-        dt_kernel_gens = [Pt(x.numerator()) for x in dt_kernel_gens]
+
+        # compute generators for the kernel of dt
+        dt_kernel_gens = dt.generators_of_kernel()
+        dt_kernel_gens_enum = [Pt(x.numerator()) for x in dt_kernel_gens]
+        dt_kernel_gens_deno = [Pt(x.denominator()) for x in dt_kernel_gens]
         
         # dictionary for substitution
         substitution = {Pt.gens()[i]: gens[i] for i in range(len(gens))}
-        gens = [dt_k.subs(substitution) for dt_k in dt_kernel_gens]
-        denoms = denoms.union({den.subs(substitution) for den in newdenoms})
-        # gens = reduce_gen_set(gens)
 
+        gens = [dt_k.subs(substitution) for dt_k in dt_kernel_gens_enum]
+        for x in dt_kernel_gens_deno:
+            x_subs = x.subs(substitution)
+            if x_subs != 1 and x_subs not in denoms:
+                denoms.append(x.subs(substitution))
+
+        # gens = reduce_gen_set(gens)
     return gens, denoms
+
+
+def reduce_gen_set(gen_set):
+    nr_gens = len(gen_set)
+    for i in range(nr_gens):
+        for j in range(i+1, nr_gens):
+            while gen_set[j] % gen_set[i] == 0:
+                gen_set[j] //= gen_set[i]
+    
+    return gen_set
+
+
+setattr(derivation_type, "integral_curves", integral_curves)
+setattr(derivation_type, "generators_of_kernel", generators_of_kernel)
+setattr(lie_algebra_type, 'rational_invariant_field', rational_invariant_field)
