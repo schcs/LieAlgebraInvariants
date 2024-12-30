@@ -1,4 +1,4 @@
-from sage.all import SR, function, diff, PolynomialRing, QQ, desolve_system, var
+from sage.all import SR, function, diff, PolynomialRing, QQ, desolve_system, var, desolve_system 
 from sage.algebras.lie_algebras.structure_coefficients import LieAlgebraWithStructureCoefficients
 from sage.rings.derivation import RingDerivationWithoutTwist
 from invariants_nilp_lie_alg import differential_operator, differential_operator_from_coeffs
@@ -149,17 +149,20 @@ def rational_invariant_field(self):
     # get the dimension of the Lie algebra and construct its
     # polynomial algebra
     d = self.dimension()
-    if True or not hasattr(self, "polynomialRing"):
+    if not hasattr(self, "polynomialRing"):
         inject_pol_ring(self)
     P = self.polynomialRing
 
     # lists of generators for P and list of basis for lie_alg
+    # gens of P in reverse order 
     gens = P.gens()[::-1]
     bas = [x for x in self.basis()]
-    denoms = []
+    denoms, denoms_in_gens = [], []
 
     # do the following computation for each basis element of lie_alg
     for i in range(d):
+        print( "computing generator ", i)
+        # print( [x.lm() for x in gens])
         # di is the current differential operator
         di = differential_operator(self, bas[i])
 
@@ -167,23 +170,54 @@ def rational_invariant_field(self):
         # in terms of the current generating set.
         # initialize the coffs with zero-vector
         coeffs = [0]*len(gens)
-        Pt = PolynomialRing(QQ, len(gens), ['t'+str(i)
-                            for i in range(len(gens))])
+        # the coefficients of di will be expressed in terms of 
+        # t1,...,t_{len(gens)+len(denoms)}
+        Pt = PolynomialRing(QQ, len(gens),
+                            ['t'+str(i) for i in range(len(gens))])
+        Ft = Pt.fraction_field()
+        
+        
+        # set up the pol ring for cs
+        Ptt = PolynomialRing(QQ, len(gens)+len(denoms), names='t')
+                
+
         for k in range(len(gens)):
             # apply di to gens[k]
             d_gen = di(gens[k])
 
             # write d_gen as polynomial in the earlier generators
             if d_gen == 0:
-                coeffs[k] = 0
+                coeffs[k] = (0,1)
             else:
-                v, cs = _is_element_of_subalgebra(gens[0:k], denoms, d_gen)
-                assert v
-                coeffs[k] = Pt(cs[0].numerator())
+                try: 
+                    v, cs = _is_element_of_subalgebra(gens, denoms, d_gen,
+                                                      Pt=Ptt)
+                except:
+                    print("_is_element unsuccessful")
+                    breakpoint()
+
+                # the dictionary for the substitution of the denoms variables
+                cs_denom_subs = {Ptt.gens()[k+x]: denoms[x]
+                                 for x in range(len(denoms))}
+                # substitute into the second components of cs
+                coeffs[k] = cs
+                                
+        denoms_in_t = [_is_element_of_subalgebra(gens, denoms[:x],  denoms[x]) 
+                       for x in range(len(denoms))]
+        denoms_subs_t = {Ptt.gens()[len(gens)+k]: denoms_in_t[k][1][0]/denoms_in_t[k][1][1]
+                         for k in range(len(denoms))}
+        
+        # write denoms in term of gens 
+        lcm_denoms = lcm(x[1] for x in coeffs)
+        if lcm_denoms != 1:
+            coeffs = [coeffs[k][0]*lcm_denoms/coeffs[k][1] for k in range(len(coeffs))]
+            coeffs = [Ptt(x).subs(denoms_subs_t) for x in coeffs]
+        else: 
+            coeffs = [Ptt(x[0]) for x in coeffs]
 
         # construct the differential operator in terms of the current gens
         # the indeterminates are gonna be t1,...,tk where k is #gens
-        dt = differential_operator_from_coeffs(Pt, coeffs)
+        dt = differential_operator_from_coeffs(Pt, [Pt(x) for x in coeffs])
 
         if dt == 0:
             continue
@@ -195,12 +229,17 @@ def rational_invariant_field(self):
         
         # dictionary for substitution
         substitution = {Pt.gens()[i]: gens[i] for i in range(len(gens))}
-
         gens = [dt_k.subs(substitution) for dt_k in dt_kernel_gens_enum]
+
         for x in dt_kernel_gens_deno:
             x_subs = x.subs(substitution)
             if x_subs != 1 and x_subs not in denoms:
-                denoms.append(x.subs(substitution))
+                denoms.append(x_subs)
+        
+        # print( "compute denoms in gens")
+        # denoms_in_gens = [_is_element_of_subalgebra(gens, [], x)[1][0] for x
+        #                   in denoms]
+        # print( denoms_in_gens )
 
         # gens = reduce_gen_set(gens)
     return gens, denoms
