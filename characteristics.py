@@ -138,7 +138,9 @@ def generators_of_kernel(d_op):
 
 
 def inject_pol_ring(lie_alg):
-    lie_alg.polynomialRing = PolynomialRing(QQ, lie_alg.dimension(),
+    
+    FF = lie_alg.base_ring()
+    lie_alg.polynomialRing = PolynomialRing(FF, lie_alg.dimension(),
                                             list(lie_alg.basis())[::-1],
                                             order="lex")
     lie_alg.fractionField = lie_alg.polynomialRing.fraction_field()
@@ -152,6 +154,7 @@ def rational_invariant_field(self):
     if not hasattr(self, "polynomialRing"):
         inject_pol_ring(self)
     P = self.polynomialRing
+    FF = self.base_ring()
 
     # lists of generators for P and list of basis for lie_alg
     # gens of P in reverse order 
@@ -161,7 +164,6 @@ def rational_invariant_field(self):
 
     # do the following computation for each basis element of lie_alg
     for i in range(d):
-        print( "computing generator ", i)
         # print( [x.lm() for x in gens])
         # di is the current differential operator
         di = differential_operator(self, bas[i])
@@ -172,15 +174,14 @@ def rational_invariant_field(self):
         coeffs = [0]*len(gens)
         # the coefficients of di will be expressed in terms of 
         # t1,...,t_{len(gens)+len(denoms)}
-        Pt = PolynomialRing(QQ, len(gens),
+        Pt = PolynomialRing(FF, len(gens),
                             ['t'+str(i) for i in range(len(gens))])
         Ft = Pt.fraction_field()
         
         
         # set up the pol ring for cs
-        Ptt = PolynomialRing(QQ, len(gens)+len(denoms), names='t')
-                
-
+        Ptt = PolynomialRing(FF, len(gens)+len(denoms), names='t')
+        
         for k in range(len(gens)):
             # apply di to gens[k]
             d_gen = di(gens[k])
@@ -233,7 +234,7 @@ def rational_invariant_field(self):
 
         for x in dt_kernel_gens_deno:
             x_subs = x.subs(substitution)
-            if x_subs != 1 and x_subs not in denoms:
+            if x_subs not in FF and x_subs not in denoms:
                 denoms.append(x_subs)
         
         # print( "compute denoms in gens")

@@ -260,6 +260,8 @@ def nilpotent_lie_algebra( F, args, standard_basis = False ):
             Lie algebra on 6 generators (x0, x1, x2, x3, x4, x5) over Rational Field
 
     '''
+    if not hasattr(libgap, 'NilpotentLieAlgebra'):
+        libgap.LoadPackage('liealgdb')
     L = lie_alg_from_libgap_to_sage( libgap.NilpotentLieAlgebra( F, args ))
     if not standard_basis:
         return L

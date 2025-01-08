@@ -99,6 +99,8 @@ def alg_dependence(gens):
         sage: dep[0].subs( t0=gens[0],t1=gens[1],t2=gens[2], t3 = gens[3] )
         0
     '''
+    
+    FF = gens[0].parent().base_ring()
     P = gens[0].parent()   # the underlying pol ring
     P_gens = P.gens()      # the generators of P
     nr_gens = len(gens)    # number of gens of ideal
@@ -129,7 +131,7 @@ def alg_dependence(gens):
     if elim_id.is_zero():
         return 0
     else:
-        Pt = PolynomialRing(QQ, nr_gens, 't')
+        Pt = PolynomialRing(FF, nr_gens, 't')
         # vars = var ( ''.join( [f't{i},' for i in range(nr_gens)]))
         subs_values = tuple(0 for _ in range(n)) + Pt.gens()
         subs_dict = dict(zip(R.gens(), subs_values))
@@ -168,7 +170,8 @@ def is_element_of_subalgebra(gens, p):
     '''
     gens_new = rational_functions_to_pols(gens + [p])
     deps = alg_dependence(gens_new)
-
+    FF = p.parent().base_ring()
+    
     if len(deps) == 0:
         return False, None
 
@@ -178,7 +181,7 @@ def is_element_of_subalgebra(gens, p):
         return False, None
 
     dep = deps[0]
-    Pt = PolynomialRing(QQ, len(gens) + 1, 't')
+    Pt = PolynomialRing(FF, len(gens) + 1, 't')
     dep_symb = symbolic_expression(dep)
     p_var_symb = symbolic_expression(p_var)
     symb_sol = solve(dep_symb, p_var_symb)[0].rhs()
@@ -222,7 +225,8 @@ def _is_element_of_subalgebra(gens, denoms, p, Pt=False):
     EXAMPLES::
 
     '''
-
+    print( gens, denoms, p)
+    FF = p.parent().base_ring()
     # count number of gens, etc
     nr_denoms = len(denoms)
 
@@ -231,7 +235,7 @@ def _is_element_of_subalgebra(gens, denoms, p, Pt=False):
     if isinstance(Pt, bool):
         nr_gens = len(gens)
         names = ['t'+str(i) for i in range(nr_gens+nr_denoms)]
-        Pt = PolynomialRing(QQ, nr_gens+nr_denoms, names=names)
+        Pt = PolynomialRing(FF, nr_gens+nr_denoms, names=names)
     else:
         nr_gens = Pt.ngens()-len(denoms)
     if p == 1:
@@ -311,7 +315,7 @@ def _is_element_of_subalgebra(gens, denoms, p, Pt=False):
                         den_mon *= Pt.gens()[nr_gens+i]
 
         # now compute the coefficient
-        coeff = QQ(-p.coefficient(p.lm()) *
+        coeff = FF(-p.coefficient(p.lm()) *
                    reduction_pol.coefficient(reduction_pol.lm()))
         # modify tpol and also p
         tpol -= coeff*tmon/den_mon
