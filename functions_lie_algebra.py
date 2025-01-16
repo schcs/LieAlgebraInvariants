@@ -426,9 +426,9 @@ def triangular_basis_nilpotent_lie_algebra(L):
     for i in range(dimZ):
         baseLnova[i] = baseZ[i]
         baseLnovaTrun[i] = baseZ[i]
-    print("centro")
-    print(baseLnova)
-    print("----")
+    #print("centro")
+    #print(baseLnova)
+    #print("----")
     Q = L.quotient(Z) # quociente L/Z
     ZQ = Q.center() # centro de L/Z
     baseZQ = list(ZQ.basis()) # base de Z(L/Z)
@@ -437,9 +437,9 @@ def triangular_basis_nilpotent_lie_algebra(L):
     for i in range(dimZ, dimZ + dimZQ):
         baseLnova[i] = Q.lift(baseZQ[i - dimZ])
         preImBaseZQ[i - dimZ] = Q.lift(baseZQ[i - dimZ]) # pré-imagem da base de Z(L/Z)
-    print(dimZQ)
-    print(baseLnova)
-    print("----")
+    #print(dimZQ)
+    #print(baseLnova)
+    #print("----")
     baseLnovaTrun = baseLnovaTrun + preImBaseZQ
     cont = len(baseLnovaTrun)
     while cont < dimL:
@@ -452,9 +452,9 @@ def triangular_basis_nilpotent_lie_algebra(L):
         for i in range(cont, cont+dimZQ):
             baseLnova[i] = Q.lift(baseZQ[i - cont])
             preImBaseZQ[i - cont] = Q.lift(baseZQ[i - cont])
-        print(cont)
-        print(baseLnova)
-        print("----")
+        #print(cont)
+        #print(baseLnova)
+        #print("----")
         cont = cont + dimZQ
         baseLnovaTrun = baseLnovaTrun + preImBaseZQ
     return baseLnova
