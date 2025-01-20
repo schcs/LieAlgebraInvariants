@@ -200,15 +200,17 @@ def rational_invariant_field(self):
 
                 # substitute into the second components of cs
                 coeffs[k] = cs
-                if denom == 1: 
+                if new_denom == 1: 
                     new_denom = d_gen
         
                 
         # write denoms in term of gens 
-        if denom != 1:
-            denom_in_t = _is_element_of_subalgebra(gens, denom,  1)
-            denoms_subs_t = {Ptt.gens()[len(gens)]: denom_in_t[1][0]/denoms_in_t[1][1]}
-            coeffs = [coeffs[k][0]*denom/coeffs[k][1] for k in range(len(coeffs))]
+        lcm_denom = lcm( x[1] for x in coeffs )
+        if lcm_denom != 1:
+            lcm_denom_in_t = _is_element_of_subalgebra(gens, lcm_denom,  1)
+            lcm_denom_in_t = lcm_denom_in_t[1][0]/lcm_denom_in_t[1][1]
+            denoms_subs_t = {Ptt.gens()[len(gens)]: lcm_denom_in_t[1][0]/lcm_denom_in_t[1][1]}
+            coeffs = [coeffs[k][0]*lcm_denom_in_t/coeffs[k][1] for k in range(len(coeffs))]
             coeffs = [Ptt(x).subs(denoms_subs_t) for x in coeffs]
         else: 
             coeffs = [Ptt(x[0]) for x in coeffs]
@@ -216,6 +218,8 @@ def rational_invariant_field(self):
         # construct the differential operator in terms of the current gens
         # the indeterminates are gonna be t1,...,tk where k is #gens
 
+        if i == 30:
+            breakpoint()
         dt = differential_operator_from_coeffs(Pt, [Pt(x) for x in coeffs])
 
         if dt == 0:

@@ -225,10 +225,9 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False):
     EXAMPLES::
 
     '''
-    print(gens, p, denom)
     FF = p.parent().base_ring()
     # count number of gens, etc
-    nr_denom = 0 if denom == 0 else 1  
+    nr_denom = 0 if denom == 1 else 1  
 
     # set up a polynomial ring with enough variables to refer to 
     # gens and denoms as indeterminates
@@ -268,7 +267,7 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False):
 
     # start the reduction. initialize tpol and den_mon
     tpol, den_exp = 0, 0
-
+    denom_var = Pt.gens()[len(gens)] if nr_denom == 1 else 1
     # we reduce p until it is zero
     while p != 0:
         lm_old = p.lm()
@@ -307,7 +306,7 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False):
             # if lm_p_denom is divisible by denom, then divide
             if denom % lm_p_denom == 0:
                 while lm_p.denominator() != 1:
-                    lm_p *= den
+                    lm_p *= lm_p_denom
                     p *= denom
                     den_exp += 1
 
@@ -315,7 +314,7 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False):
         coeff = FF(-p.coefficient(p.lm()) *
                    reduction_pol.coefficient(reduction_pol.lm()))
         # modify tpol and also p
-        tpol -= coeff*tmon/denom**den_exp
+        tpol -= coeff*tmon/denom_var**den_exp
         p += coeff*reduction_pol
                     
     # check that the result is correct
