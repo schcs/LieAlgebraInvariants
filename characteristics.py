@@ -160,7 +160,7 @@ def rational_invariant_field(self):
     # gens of P in reverse order 
     gens = P.gens()[::-1]
     bas = [x for x in self.basis()]
-    denoms, denoms_in_gens = [], []
+    denom, denom_in_gens = 1, 1
 
     # do the following computation for each basis element of lie_alg
     for i in range(d):
@@ -180,8 +180,10 @@ def rational_invariant_field(self):
         
         
         # set up the pol ring for cs
-        Ptt = PolynomialRing(FF, len(gens)+len(denoms), names='t')
+        nr_denom = 0 if denom == 1 else 1 
+        Ptt = PolynomialRing(FF, len(gens)+nr_denom, names='t')
         
+        new_denom = 1
         for k in range(len(gens)):
             # apply di to gens[k]
             d_gen = di(gens[k])
@@ -191,59 +193,44 @@ def rational_invariant_field(self):
                 coeffs[k] = (0,1)
             else:
                 try: 
-                    v, cs = _is_element_of_subalgebra(gens, denoms, d_gen,
-                                                      Pt=Ptt)
+                    v, cs = _is_element_of_subalgebra(gens, d_gen, denom, Pt=Ptt)
                 except:
                     print("_is_element unsuccessful")
                     breakpoint()
 
-                # the dictionary for the substitution of the denoms variables
-                cs_denom_subs = {Ptt.gens()[k+x]: denoms[x]
-                                 for x in range(len(denoms))}
                 # substitute into the second components of cs
                 coeffs[k] = cs
-                                
-        denoms_in_t = [_is_element_of_subalgebra(gens, denoms[:x],  denoms[x]) 
-                       for x in range(len(denoms))]
-        denoms_subs_t = {Ptt.gens()[len(gens)+k]: denoms_in_t[k][1][0]/denoms_in_t[k][1][1]
-                         for k in range(len(denoms))}
+                if denom == 1: 
+                    new_denom = d_gen
         
+                
         # write denoms in term of gens 
-        lcm_denoms = lcm(x[1] for x in coeffs)
-        if lcm_denoms != 1:
-            coeffs = [coeffs[k][0]*lcm_denoms/coeffs[k][1] for k in range(len(coeffs))]
+        if denom != 1:
+            denom_in_t = _is_element_of_subalgebra(gens, denom,  1)
+            denoms_subs_t = {Ptt.gens()[len(gens)]: denom_in_t[1][0]/denoms_in_t[1][1]}
+            coeffs = [coeffs[k][0]*denom/coeffs[k][1] for k in range(len(coeffs))]
             coeffs = [Ptt(x).subs(denoms_subs_t) for x in coeffs]
         else: 
             coeffs = [Ptt(x[0]) for x in coeffs]
-
+        
         # construct the differential operator in terms of the current gens
         # the indeterminates are gonna be t1,...,tk where k is #gens
+
         dt = differential_operator_from_coeffs(Pt, [Pt(x) for x in coeffs])
 
         if dt == 0:
             continue
-
+                
         # compute generators for the kernel of dt
         dt_kernel_gens = dt.generators_of_kernel()
         dt_kernel_gens_enum = [Pt(x.numerator()) for x in dt_kernel_gens]
-        dt_kernel_gens_deno = [Pt(x.denominator()) for x in dt_kernel_gens]
         
         # dictionary for substitution
         substitution = {Pt.gens()[i]: gens[i] for i in range(len(gens))}
         gens = [dt_k.subs(substitution) for dt_k in dt_kernel_gens_enum]
-
-        for x in dt_kernel_gens_deno:
-            x_subs = x.subs(substitution)
-            if x_subs not in FF and x_subs not in denoms:
-                denoms.append(x_subs)
+        denom = new_denom 
         
-        # print( "compute denoms in gens")
-        # denoms_in_gens = [_is_element_of_subalgebra(gens, [], x)[1][0] for x
-        #                   in denoms]
-        # print( denoms_in_gens )
-
-        # gens = reduce_gen_set(gens)
-    return gens, denoms
+    return gens, denom
 
 
 def reduce_gen_set(gen_set):
