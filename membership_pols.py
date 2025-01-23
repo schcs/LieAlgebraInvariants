@@ -225,6 +225,7 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False):
     EXAMPLES::
 
     '''
+    #print( gens, "\n", p, "\n", denom )
     FF = p.parent().base_ring()
     # count number of gens, etc
     nr_denom = 0 if denom == 1 else 1  
@@ -318,8 +319,8 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False):
         p += coeff*reduction_pol
                     
     # check that the result is correct
-    nr_zeros = Pt.ngens()-len(gens)-nr_denom
-    assert tpol.subs(dict(zip(Pt.gens(), list(gens)+[0]*nr_zeros+[denom]))) == p_orig
+    # nr_zeros = Pt.ngens()-len(gens)-nr_denom
+    assert tpol.subs(dict(zip(Pt.gens(), list(gens)+[denom]))) == p_orig
     
     # return the final result, with numerator and denominator separately.
     return True, (tpol.numerator(), tpol.denominator())

@@ -160,29 +160,30 @@ def rational_invariant_field(self):
     # gens of P in reverse order 
     gens = P.gens()[::-1]
     bas = [x for x in self.basis()]
-    denom, denom_in_gens = 1, 1
+    
+    # the current denominator
+    denom = 1
 
     # do the following computation for each basis element of lie_alg
     for i in range(d):
-        # print( [x.lm() for x in gens])
         # di is the current differential operator
         di = differential_operator(self, bas[i])
 
         # compute the current differential operator
         # in terms of the current generating set.
         # initialize the coffs with zero-vector
+    
         coeffs = [0]*len(gens)
-        # the coefficients of di will be expressed in terms of 
-        # t1,...,t_{len(gens)+len(denoms)}
+        # the coefficients of di will be expressed in terms of
+        # t1,...,t_{len(gens)}, t_{len(gens)+1} (the last indeterminate  
+        # corresponds to denom)
         Pt = PolynomialRing(FF, len(gens),
                             ['t'+str(i) for i in range(len(gens))])
-        Ft = Pt.fraction_field()
-        
         
         # set up the pol ring for cs
-        nr_denom = 0 if denom == 1 else 1 
-        Ptt = PolynomialRing(FF, len(gens)+nr_denom, names='t')
+        Ptt = PolynomialRing(FF, len(gens)+1, names='t')
         
+        # new denom will be calculated
         new_denom = 1
         for k in range(len(gens)):
             # apply di to gens[k]
@@ -192,36 +193,35 @@ def rational_invariant_field(self):
             if d_gen == 0:
                 coeffs[k] = (0,1)
             else:
-                try: 
-                    v, cs = _is_element_of_subalgebra(gens, d_gen, denom, Pt=Ptt)
-                except:
-                    print("_is_element unsuccessful")
-                    breakpoint()
-
+                v, cs = _is_element_of_subalgebra(gens, d_gen, denom, Pt=Ptt)
+                assert v
                 # substitute into the second components of cs
                 coeffs[k] = cs
                 if new_denom == 1: 
                     new_denom = d_gen
         
+        # Now the the coefficients of the differential operator are 
+        # rational functions in the generators with possible denominator 
+        # which is a power of denom.
                 
         # write denoms in term of gens 
         lcm_denom = lcm( x[1] for x in coeffs )
         if lcm_denom != 1:
-            lcm_denom_in_t = _is_element_of_subalgebra(gens, lcm_denom,  1)
-            lcm_denom_in_t = lcm_denom_in_t[1][0]/lcm_denom_in_t[1][1]
-            denoms_subs_t = {Ptt.gens()[len(gens)]: lcm_denom_in_t[1][0]/lcm_denom_in_t[1][1]}
-            coeffs = [coeffs[k][0]*lcm_denom_in_t/coeffs[k][1] for k in range(len(coeffs))]
-            coeffs = [Ptt(x).subs(denoms_subs_t) for x in coeffs]
+            print("lcm_denom is", lcm_denom)
+            v, lcm_denom_in_t = _is_element_of_subalgebra(gens, lcm_denom,  1)
+            assert v and lcm_denom[1] == 1 
+            lcm_denom_in_t = lcm_denom_in_t[0]
+            denoms_subs_t = {Ptt.gens()[len(gens)]: lcm_denom_in_t[0]}
+            coeffs = [Ptt(coeffs[k][0]*lcm_denom_in_t/coeffs[k][1]) for k in range(len(coeffs))]
+            #coeffs = [Ptt(x).subs(denoms_subs_t) for x in coeffs]
         else: 
             coeffs = [Ptt(x[0]) for x in coeffs]
         
         # construct the differential operator in terms of the current gens
         # the indeterminates are gonna be t1,...,tk where k is #gens
 
-        if i == 30:
-            breakpoint()
+        
         dt = differential_operator_from_coeffs(Pt, [Pt(x) for x in coeffs])
-
         if dt == 0:
             continue
                 
@@ -232,7 +232,28 @@ def rational_invariant_field(self):
         # dictionary for substitution
         substitution = {Pt.gens()[i]: gens[i] for i in range(len(gens))}
         gens = [dt_k.subs(substitution) for dt_k in dt_kernel_gens_enum]
+        
         denom = new_denom 
+        
+        # we need to fix up the generating set 
+        Ptt = PolynomialRing(FF, len(gens)+1, names='t')
+        for ng in range(len(gens)):
+            ng_factor = P(1)
+            for j in range(i+1,d):
+                dj = differential_operator(l, bas[j])
+                dj_g = dj(gens[ng])
+                v, cs = _is_element_of_subalgebra(gens[:ng], dj_g, denom, Pt=Ptt)
+                assert v 
+                if cs[1] != 1: 
+                    #breakpoint()
+                    cs_denom_in_x = cs[1].subs(substitution)
+                    ng_factor = lcm(ng_factor,cs_denom_in_x)
+            if ng_factor != 1:
+                print("multiply with", ng_factor)
+                gens[ng] *= ng_factor
+        
+        
+        # print( dt, denom )
         
     return gens, denom
 
