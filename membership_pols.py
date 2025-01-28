@@ -205,7 +205,7 @@ def is_element_of_subalgebra_localization(gens, p, q, nr_tries=100):
     return False
 
 
-def _is_element_of_subalgebra(gens, p, denom=1, Pt=False):
+def _is_element_of_subalgebra(gens, p, denom=1, Pt=False, denom_var=0):
     '''
     INPUT:
 
@@ -225,7 +225,7 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False):
     EXAMPLES::
 
     '''
-    #print( gens, "\n", p, "\n", denom )
+    # print( "gens is ", gens, "\n", "p is ", p, "\n", "denom is ", denom )
     FF = p.parent().base_ring()
     # count number of gens, etc
     nr_denom = 0 if denom == 1 else 1  
@@ -268,7 +268,9 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False):
 
     # start the reduction. initialize tpol and den_mon
     tpol, den_exp = 0, 0
-    denom_var = Pt.gens()[len(gens)] if nr_denom == 1 else 1
+    if denom_var == 0:
+        denom_var = Pt.gens()[len(gens)] if nr_denom == 1 else 1
+    
     # we reduce p until it is zero
     while p != 0:
         lm_old = p.lm()
@@ -320,7 +322,9 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False):
                     
     # check that the result is correct
     # nr_zeros = Pt.ngens()-len(gens)-nr_denom
-    assert tpol.subs(dict(zip(Pt.gens(), list(gens)+[denom]))) == p_orig
+    subs_dict = dict(zip(Pt.gens(), list(gens)))
+    subs_dict[denom_var] = denom
+    assert tpol.subs(subs_dict) == p_orig
     
     # return the final result, with numerator and denominator separately.
     return True, (tpol.numerator(), tpol.denominator())

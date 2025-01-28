@@ -200,22 +200,7 @@ def rational_invariant_field(self):
                 if new_denom == 1: 
                     new_denom = d_gen
         
-        # Now the the coefficients of the differential operator are 
-        # rational functions in the generators with possible denominator 
-        # which is a power of denom.
-                
-        # write denoms in term of gens 
-        lcm_denom = lcm( x[1] for x in coeffs )
-        if lcm_denom != 1:
-            print("lcm_denom is", lcm_denom)
-            v, lcm_denom_in_t = _is_element_of_subalgebra(gens, lcm_denom,  1)
-            assert v and lcm_denom[1] == 1 
-            lcm_denom_in_t = lcm_denom_in_t[0]
-            denoms_subs_t = {Ptt.gens()[len(gens)]: lcm_denom_in_t[0]}
-            coeffs = [Ptt(coeffs[k][0]*lcm_denom_in_t/coeffs[k][1]) for k in range(len(coeffs))]
-            #coeffs = [Ptt(x).subs(denoms_subs_t) for x in coeffs]
-        else: 
-            coeffs = [Ptt(x[0]) for x in coeffs]
+        coeffs = [Ptt(x[0]) for x in coeffs]
         
         # construct the differential operator in terms of the current gens
         # the indeterminates are gonna be t1,...,tk where k is #gens
@@ -232,8 +217,8 @@ def rational_invariant_field(self):
         # dictionary for substitution
         substitution = {Pt.gens()[i]: gens[i] for i in range(len(gens))}
         gens = [dt_k.subs(substitution) for dt_k in dt_kernel_gens_enum]
-        
-        denom = new_denom 
+        print(gens)
+        substitution = {Pt.gens()[i]: gens[i] for i in range(len(gens))}
         
         # we need to fix up the generating set 
         Ptt = PolynomialRing(FF, len(gens)+1, names='t')
@@ -242,15 +227,26 @@ def rational_invariant_field(self):
             for j in range(i+1,d):
                 dj = differential_operator(l, bas[j])
                 dj_g = dj(gens[ng])
-                v, cs = _is_element_of_subalgebra(gens[:ng], dj_g, denom, Pt=Ptt)
+                v, cs = _is_element_of_subalgebra(gens[:ng], dj_g, denom, Pt=Ptt, denom_var = Ptt.gens()[len(gens)])
                 assert v 
                 if cs[1] != 1: 
-                    #breakpoint()
-                    cs_denom_in_x = cs[1].subs(substitution)
+                    # breakpoint()
+                    cs_denom_in_x = Pt(cs[1]).subs({Ptt.gens()[len(gens)]:denom})
                     ng_factor = lcm(ng_factor,cs_denom_in_x)
             if ng_factor != 1:
-                print("multiply with", ng_factor)
+                # breakpoint()
+                # print("multiply with", ng_factor)
                 gens[ng] *= ng_factor
+                substitution = {Pt.gens()[i]: gens[i] for i in range(len(gens))}
+        
+        substitution = {Pt.gens()[i]: gens[i] for i in range(len(gens))}
+        denom_in_gens = _is_element_of_subalgebra( gens, P(denom), new_denom, Pt=Ptt)
+        if denom_in_gens[1][1] != 1:
+            breakpoint()
+        assert denom_in_gens[0]
+        denom_in_gens = Pt(denom_in_gens[1][0]).subs(substitution)
+        denom = new_denom*denom_in_gens 
+        # print( "denom now is ", denom )
         
         
         # print( dt, denom )
