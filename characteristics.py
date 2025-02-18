@@ -120,6 +120,9 @@ def generators_of_kernel(d_op):
     r"""
 
     """
+    if d_op == 0:
+        return d_op.domain().gens()
+
     curves = [c.rhs() for c in integral_curves(d_op)]
     t = var('t')
     gens_P = d_op.domain().gens()
@@ -141,8 +144,8 @@ def inject_pol_ring(lie_alg):
     
     FF = lie_alg.base_ring()
     lie_alg.polynomialRing = PolynomialRing(FF, lie_alg.dimension(),
-                                            list(lie_alg.basis())[::-1],
-                                            order="lex")
+                                            list(lie_alg.basis()),
+                                            order="invlex")
     lie_alg.fractionField = lie_alg.polynomialRing.fraction_field()
 
 
@@ -252,6 +255,60 @@ def rational_invariant_field(self):
         # print( dt, denom )
         
     return gens, denom
+
+
+def rational_invariant_field2(l):
+
+    # setting up
+    bl = list(l.basis())
+    l_dim = l.dimension()
+    inject_pol_ring(l)
+    P = l.polynomialRing
+    Pt = P #PolynomialRing(QQ, l_dim, 't', order='invlex')
+    K = l.base_ring()
+
+    # step 0
+    gens = P.gens()
+    # aux pol ring
+    table = zero_matrix(Pt, l_dim, l_dim)
+    for x in range(l_dim):
+        for y in range(l_dim):
+            lprod = l.bracket(bl[x], bl[y])
+            prod_dict = lprod.monomial_coefficients()
+            table[x, y] = sum( prod_dict[k]*P(k) for k in prod_dict)
+    #subs = dict(zip(gens,Pt.gens()))
+    #subs = dict(zip(Pt.gens(),gens))
+    denom = Pt(1)
+    subs = {}
+
+    for k in range(l.dimension()):
+        print(k)
+        subs = dict(zip(Pt.gens(), [x.subs(subs) for x in gens]))
+        d = Pt.derivation(list(table[k]))
+        denom = Pt(next((x for x in table[k] if x), None))
+        gens = [Pt(x.numerator()) for x in d.generators_of_kernel()]        
+        oldPt, Pt = Pt, PolynomialRing(K, len(gens), 't', order='invlex')
+        Ft = Pt.fraction_field()
+        newtable = zero_matrix(Pt, l_dim, len(gens))
+        diff_ops = {x:oldPt.derivation(list(table[x])) for x in range(k,l_dim)}
+        denom_in_t = _is_element_of_subalgebra(gens, denom, 1, Pt=Pt)[1]
+        for y in range(len(gens)):
+            coeffvec = zero_vector(Ft,l_dim)
+            for x in range(k, l_dim):
+                dxy_in_t = _is_element_of_subalgebra(gens, diff_ops[x](gens[y]), denom, 
+                                                     denom_in_t = denom_in_t, Pt=Pt)
+                coeffvec[x] = Ft(dxy_in_t[1])
+            list_denoms = [x.denominator() for x in coeffvec]
+            lcm_denom = prod(list_denoms)/gcd(list_denoms)
+            if lcm_denom != 1:
+                gens[y] *= lcm_denom
+                coeffvec *= lcm_denom
+            newtable[:, y] = coeffvec
+        table = newtable
+
+    return [x.subs(subs) for x in gens]
+
+
 
 
 def reduce_gen_set(gen_set):

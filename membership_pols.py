@@ -171,7 +171,7 @@ def is_element_of_subalgebra(gens, p):
     gens_new = rational_functions_to_pols(gens + [p])
     deps = alg_dependence(gens_new)
     FF = p.parent().base_ring()
-    
+
     if len(deps) == 0:
         return False, None
 
@@ -205,7 +205,7 @@ def is_element_of_subalgebra_localization(gens, p, q, nr_tries=100):
     return False
 
 
-def _is_element_of_subalgebra(gens, p, denom=1, Pt=False, denom_var=0):
+def _is_element_of_subalgebra(gens, p, denom=1, denom_in_t = 1, Pt=False, denom_var=0):
     '''
     INPUT:
 
@@ -225,23 +225,21 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False, denom_var=0):
     EXAMPLES::
 
     '''
-    # print( "gens is ", gens, "\n", "p is ", p, "\n", "denom is ", denom )
+    # print("gens is ", gens, "\n", "p is ", p, "\n", "denom is ", denom)
     FF = p.parent().base_ring()
-    # count number of gens, etc
-    nr_denom = 0 if denom == 1 else 1  
 
     # set up a polynomial ring with enough variables to refer to 
     # gens and denoms as indeterminates
     if isinstance(Pt, bool):
         nr_gens = len(gens)
-        names = ['t'+str(i) for i in range(nr_gens+nr_denom)]
-        Pt = PolynomialRing(FF, nr_gens+nr_denom, names=names)
+        names = ['t'+str(i) for i in range(nr_gens)]
+        Pt = PolynomialRing(FF, nr_gens, names=names)
     else:
-        nr_gens = Pt.ngens()-nr_denom 
+        nr_gens = Pt.ngens() 
     if p == 1:
-        return True, (Pt(1), Pt(1))
+        return True, Pt(1)
     elif p == 0:
-        return True, (Pt(0), Pt(1))
+        return True, Pt(0)
 
     # save the polynomial for final check
     p_orig = p
@@ -252,24 +250,22 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False, denom_var=0):
 
     # extract info for the parent if p
     P = p.parent()
-    gensP = P.gens()
+    gensP = P.gens()[::-1]
     nr_gensP = len(gensP)
 
-    # dict_gens is a dictionary that which shows for the generators of P
+    # dict_gens is a dictionary that shows for the generators of P
     # in which element of gens it occurs in the leading term
     #
     # first list_gens contains a list which shows what is the highest
     # generator in the leading term of the k-th element of gens.
-    list_gens = [next((i for i, x in enumerate(d.degrees()) if x), None)
-                 for d in lm_gens]
-
-    dict_gens = {gensP[x]: list_gens.index(x) for x in range(nr_gensP)
-                 if x in list_gens}
-
+    list_gens = [x.variables()[0] for x in lm_gens]
+    dict_gens = {list_gens[k]: k for k in range(len(list_gens))}
+    
     # start the reduction. initialize tpol and den_mon
     tpol, den_exp = 0, 0
     if denom_var == 0:
-        denom_var = Pt.gens()[len(gens)] if nr_denom == 1 else 1
+        P_dn = PolynomialRing( Pt, 'dn')
+        denom_var = P_dn.gens()[0]
     
     # we reduce p until it is zero
     while p != 0:
@@ -300,6 +296,7 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False, denom_var=0):
         # if p is a polynomial in gens, then then lm_p reduce to 1
         # in the previous cycle. If this is not the case, we must correct
         # by the denominators
+        
         if lm_p != 1:
             # need to get denoms involved
             lm_p_denom = lm_p.denominator()
@@ -307,24 +304,31 @@ def _is_element_of_subalgebra(gens, p, denom=1, Pt=False, denom_var=0):
             # we try to reduce the denominator of lm_p with the
             # leading term of denom    
             # if lm_p_denom is divisible by denom, then divide
-            if denom % lm_p_denom == 0:
-                while lm_p.denominator() != 1:
-                    lm_p *= lm_p_denom
-                    p *= denom
-                    den_exp += 1
-
+            while lm_p.denominator() != 1:
+                lm_p *= lm_p_denom
+                p *= denom
+                den_exp += 1
+        
+        
         # now compute the coefficient
         coeff = FF(-p.coefficient(p.lm()) *
                    reduction_pol.coefficient(reduction_pol.lm()))
         # modify tpol and also p
         tpol -= coeff*tmon/denom_var**den_exp
         p += coeff*reduction_pol
-                    
+        # assert p.lm() < lm_old
+
     # check that the result is correct
     # nr_zeros = Pt.ngens()-len(gens)-nr_denom
-    subs_dict = dict(zip(Pt.gens(), list(gens)))
-    subs_dict[denom_var] = denom
-    assert tpol.subs(subs_dict) == p_orig
-    
+    #if denom_var != 1:
+    #    subs_dict = dict(zip(Pt.gens(), list(gens)))
+    #    subs_dict[denom_var] = denom
+    #breakpoint()
+    #assert tpol.subs(subs_dict) == p_orig
+
     # return the final result, with numerator and denominator separately.
-    return True, (tpol.numerator(), tpol.denominator())
+    if tpol.denominator() != 1:
+        pass
+        # breakpoint()
+    tpol = tpol.subs({denom_var: denom_in_t})
+    return True, tpol

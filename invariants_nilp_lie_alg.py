@@ -86,6 +86,7 @@ def differential_operator_from_coeffs(P, coeffs):
     op = D.zero()
     
     for k in range(len(coeffs)): 
+        breakpoint()
         op += coeffs[k]*D.gens()[k]
 
     return op
