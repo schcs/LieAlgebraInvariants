@@ -258,9 +258,9 @@ def _is_element_of_subalgebra(gens, p, denom=1, denom_in_t = 1, Pt=False, denom_
     #
     # first list_gens contains a list which shows what is the highest
     # generator in the leading term of the k-th element of gens.
-    list_gens = [x.variables()[0] for x in lm_gens]
+    list_gens = [max(x.variables()) for x in lm_gens]
+
     dict_gens = {list_gens[k]: k for k in range(len(list_gens))}
-    
     # start the reduction. initialize tpol and den_mon
     tpol, den_exp = 0, 0
     if denom_var == 0:

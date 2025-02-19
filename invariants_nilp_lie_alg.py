@@ -1,6 +1,10 @@
 from sage.all import QQ, PolynomialRing
 
 
+def  lie_element_to_pol(el):
+    el_dict = el.monomial_coefficients()
+    return sum( el_dict[k]*el.parent().polynomialRing(k) for k in el_dict)
+
 def differential_operator(L, x, leading_char='x'):
     r'''
         INPUT:
@@ -69,13 +73,15 @@ def differential_operator(L, x, leading_char='x'):
     # now see if elements of L can be viewed as linear polynomoils in P.
     # If not, raise error.
     try:
-        P(L.an_element())
+        el = L.an_element()
+        prod_dict = el.monomial_coefficients()
+        sum( prod_dict[k]*P(k) for k in prod_dict)
     except TypeError:
         raise TypeError("Lie algebra elements cannot be viewed as polynomials")
 
     # now construct the differential operator
     bas = L.basis()
-    return sum(P(L.bracket(x, y))*P.derivation(P(str(y))) for y in bas)
+    return P.derivation([lie_element_to_pol(L.bracket(x, y)) for y in bas])
 
 
 def differential_operator_from_coeffs(P, coeffs):

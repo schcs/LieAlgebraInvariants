@@ -64,7 +64,8 @@ def equations_from_differential_operator(d_op):
 
     '''
     # find the coefficients of d_op
-    coeffs = d_op.list()
+    P = d_op.domain()
+    coeffs = [d_op(x) for x in P.gens()]
     nr_coeffs = len(coeffs)
 
     # t is the variable of the curve
@@ -112,9 +113,31 @@ def integral_curves(d_op):
     return desolve_system(eqs, c_funcs, init_cond)
 
 
-def integral_curves_triangular_derivation(d_op):
-    pass
+def generators_of_kernel_triangular_derivation(d_op):
 
+    # the number of generators of P
+    nr_gens = len(d_op.domain().gens())
+    P = d_op.domain()
+    if d_op == 0:
+        return P.gens()
+    
+    Pt = PolynomialRing(P, 't')
+    t = Pt.gens()[0]
+
+    coeffs = [d_op(x) for x in P.gens()]
+    k = next((x for x in range(nr_gens) if coeffs[x]), None)
+    zk = P.gens()[k]
+    fk = coeffs[k]
+    ck = fk*t+P.gens()[k]
+    gens = list(P.gens()[:k])
+    substitution = dict(zip(P.gens()[:k], gens))
+    substitution[P.gens()[k]] = ck 
+    for i in range(k+1,nr_gens):
+        Fi = Pt(coeffs[i].subs(substitution)).integral(t)
+        substitution[P.gens()[i]] = Fi+P.gens()[i]
+        gens.append(Fi.subs({t:-zk/fk})+P.gens()[i])
+
+    return gens
 
 def generators_of_kernel(d_op):
     r"""
@@ -285,8 +308,8 @@ def rational_invariant_field2(l):
         print(k)
         subs = dict(zip(Pt.gens(), [x.subs(subs) for x in gens]))
         d = Pt.derivation(list(table[k]))
-        denom = Pt(next((x for x in table[k] if x), None))
-        gens = [Pt(x.numerator()) for x in d.generators_of_kernel()]        
+        denom = Pt(next((x for x in table[k] if x), Pt(1)))
+        gens = [Pt(x.numerator()) for x in generators_of_kernel_triangular_derivation(d)]        
         oldPt, Pt = Pt, PolynomialRing(K, len(gens), 't', order='invlex')
         Ft = Pt.fraction_field()
         newtable = zero_matrix(Pt, l_dim, len(gens))
