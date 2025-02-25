@@ -305,7 +305,6 @@ def rational_invariant_field2(l):
     subs = {}
 
     for k in range(l.dimension()):
-        print(k)
         subs = dict(zip(Pt.gens(), [x.subs(subs) for x in gens]))
         d = Pt.derivation(list(table[k]))
         denom = Pt(next((x for x in table[k] if x), Pt(1)))
