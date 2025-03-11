@@ -1,4 +1,3 @@
 load("membership_pols.py")
-load("functions_nilp_lie_alg.py")
-load("invariants_nilp_lie_alg.py")
 load("characteristics.py")
+load("examples_lie_algs.py")
