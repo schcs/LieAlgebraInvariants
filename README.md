@@ -1,6 +1,6 @@
 # LieAlgebraInvariants
 
-This module is contains some functionality to compute algebraically independent generators for the field of rational invariants for nilpotent Lie algebras. 
+This [SageMath](www.sagemath.org) module contains some functionality to compute algebraically independent generators for the field of rational invariants for nilpotent Lie algebras. 
 
 ```python
 sage: from examples_lie_algs import lie_algebra_upper_triangular_matrices
