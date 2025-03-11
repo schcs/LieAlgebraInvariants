@@ -16,8 +16,7 @@ def differential_operator_from_coeffs(P, coeffs):
     D = P.derivation_module()
     op = D.zero()
 
-    for k in range(len(coeffs)):
-        breakpoint()
+    for k, _ in enumerate(coeffs):
         op += coeffs[k]*D.gens()[k]
 
     return op
@@ -93,7 +92,7 @@ def rational_invariant_field(lie_alg):
         # expressions for the generators in terms of the original generators
         subs = dict(zip(Pt.gens(), [x.subs(subs) for x in gens]))
 
-        # the current derivation is the derivation of Pt whose coefficients 
+        # the current derivation is the derivation of Pt whose coefficients
         # are in the k-th line of table
         d = Pt.derivation(list(table[k]))
 
@@ -122,19 +121,19 @@ def rational_invariant_field(lie_alg):
         # does this always work???
         denom_in_t = is_element_of_subalgebra(gens, denom, 1, Pt=Pt)[1]
 
-        for y in range(len(gens)):
+        for y, _ in enumerate(gens):
             coeffvec = zero_vector(Ft, l_dim)
             for x in range(k, l_dim):
                 # compute the image of gens[y] under l_derivation[x] as
                 # expressions in the generators
-                dxy_in_t = is_element_of_subalgebra(gens, 
+                dxy_in_t = is_element_of_subalgebra(gens,
                                                     l_derivations[x](gens[y]),
                                                     denom,
                                                     denom_in_t=denom_in_t,
                                                     Pt=Pt)
                 # put it into coeffvec
                 coeffvec[x] = Ft(dxy_in_t[1])
-            # compute the denominators and multiply everything with the lcm 
+            # compute the denominators and multiply everything with the lcm
             # of the denominators
             list_denoms = [x.denominator() for x in coeffvec]
             lcm_denom = prod(list_denoms)/gcd(list_denoms)
