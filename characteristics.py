@@ -172,7 +172,7 @@ def inject_pol_ring(lie_alg):
     lie_alg.fractionField = lie_alg.polynomialRing.fraction_field()
 
 
-def rational_invariant_field(self):
+def rational_invariant_field_old(self):
 
     # get the dimension of the Lie algebra and construct its
     # polynomial algebra
@@ -280,54 +280,87 @@ def rational_invariant_field(self):
     return gens, denom
 
 
-def rational_invariant_field2(l):
+def rational_invariant_field(l):
 
     # setting up
-    bl = list(l.basis())
-    l_dim = l.dimension()
+    bl, l_dim = list(l.basis()), l.dimension()
     inject_pol_ring(l)
     P = l.polynomialRing
-    Pt = P #PolynomialRing(QQ, l_dim, 't', order='invlex')
-    K = l.base_ring()
+    Pt, K = P, l.base_ring()
 
     # step 0
+    # gens contains the generators of invariants after applying 
+    # the derivation that corresponds to the basis elements
     gens = P.gens()
-    # aux pol ring
+    
+    # table contains how each derivation acts on the current generating set
+    # the initial generating set is the basis of l, so initually, this
+    # is just the multiplication table
     table = zero_matrix(Pt, l_dim, l_dim)
     for x in range(l_dim):
         for y in range(l_dim):
+            # essentially, 
+            # table[x, y] = P(l.bracket(bl[x], bl[y]))
+            # however, this does not work over more complicated fields
             lprod = l.bracket(bl[x], bl[y])
             prod_dict = lprod.monomial_coefficients()
             table[x, y] = sum( prod_dict[k]*P(k) for k in prod_dict)
-    #subs = dict(zip(gens,Pt.gens()))
-    #subs = dict(zip(Pt.gens(),gens))
-    denom = Pt(1)
-    subs = {}
+    # set up initial denominator and substitution
+    denom, subs = Pt(1), {}
 
+    # start computation here
     for k in range(l.dimension()):
+        # compute the new substitution. subs contains at each step, the expressions for the 
+        # generators in terms of the original generators
         subs = dict(zip(Pt.gens(), [x.subs(subs) for x in gens]))
+        
+        # the current derivation is the derivation of Pt whose coefficients are in the 
+        # k-th line of table
         d = Pt.derivation(list(table[k]))
+        
+        # denom is the first non-zero coefficient of d
         denom = Pt(next((x for x in table[k] if x), Pt(1)))
-        gens = [Pt(x.numerator()) for x in generators_of_kernel_triangular_derivation(d)]        
+        
+        # compute the generators of the kernel of d and take their enumerators
+        # this is valid, since the denominators are invariants
+        gens = [Pt(x.numerator()) for x in generators_of_kernel_triangular_derivation(d)] 
+        
+        # construct the new ring Pt whose rank is len(gens) 
+        # and remember the old Pt as oldPt       
         oldPt, Pt = Pt, PolynomialRing(K, len(gens), 't', order='invlex')
         Ft = Pt.fraction_field()
+        
+        # recompute the table for the action of the derivations on the new generating set
         newtable = zero_matrix(Pt, l_dim, len(gens))
-        diff_ops = {x:oldPt.derivation(list(table[x])) for x in range(k,l_dim)}
+        
+        # compute the derivations of l as they act on the generators
+        l_derivations = {x: oldPt.derivation(list(table[x])) for x in range(k,l_dim)}
+        
+        # write the denominator as polynomial in the new generators
+        # does this always work???
         denom_in_t = _is_element_of_subalgebra(gens, denom, 1, Pt=Pt)[1]
+        
+
         for y in range(len(gens)):
             coeffvec = zero_vector(Ft,l_dim)
             for x in range(k, l_dim):
-                dxy_in_t = _is_element_of_subalgebra(gens, diff_ops[x](gens[y]), denom, 
+                # compute the image of gens[y] under l_derivation[x] as expressions in the generators
+                dxy_in_t = _is_element_of_subalgebra(gens, l_derivations[x](gens[y]), denom, 
                                                      denom_in_t = denom_in_t, Pt=Pt)
+                # put it into coeffvec
                 coeffvec[x] = Ft(dxy_in_t[1])
+            # compute the denominators and multiply everything with the lcm of the 
+            # denominators
             list_denoms = [x.denominator() for x in coeffvec]
             lcm_denom = prod(list_denoms)/gcd(list_denoms)
             if lcm_denom != 1:
                 gens[y] *= lcm_denom
                 coeffvec *= lcm_denom
             newtable[:, y] = coeffvec
+        # update table
         table = newtable
 
+    # return the final generating set under substitution by subs
     return [x.subs(subs) for x in gens]
 
 
