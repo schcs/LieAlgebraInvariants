@@ -1,8 +1,48 @@
+"""
+This module provides functions to create and manipulate various Lie algebras.
+It includes functions to generate upper triangular matrices, standard filiform
+Lie algebras, and specific families of Lie algebras. Additionally, it provides
+utilities to convert Lie algebras from the GAP system to SageMath.
+
+Functions:
+- lie_algebra_upper_triangular_matrices: Generates a Lie algebra of upper
+  triangular matrices.
+- standard_filiform_lie_algebra: Generates a standard filiform Lie algebra.
+- lie_alg_from_libgap_to_sage: Converts a Lie algebra from GAP to SageMath.
+- nilpotent_lie_algebra: Generates a nilpotent Lie algebra using GAP and
+  converts it to SageMath.
+- lie_alg_family_6_19: Generates a specific family of Lie algebra.
+- lie_alg_family_6_21: Generates a specific family of Lie algebra.
+- lie_alg_family_6_22: Generates a specific family of Lie algebra.
+- lie_alg_family_6_24: Generates a specific family of Lie algebra.
+
+The Lie algebras generated  by the last four functions are the Lie algebras with 
+dimension 6 and index 19, 21, 22, 24 in the paper by Cicalo-de Graaf-Schneder
+"6-dimensional nilpotent Lie algebras."
+"""
+
 from sage.all import QQ, LieAlgebra, libgap, FunctionField
 
 
 def lie_algebra_upper_triangular_matrices(n, strict=False, field=QQ):
+    """
+    Generates a Lie algebra of upper triangular matrices.
 
+    Args:
+        n (int): The size of the matrices.
+        strict (bool, optional): If True, generates strictly upper triangular 
+        matrices. Defaults to False.
+        field (Field, optional): The field over which the Lie algebra is 
+        defined. Defaults to QQ.
+
+    Returns:
+        LieAlgebra: The Lie algebra of upper triangular matrices.
+
+    Examples:
+        sage: L = lie_algebra_upper_triangular_matrices(3)
+        sage: L
+        Lie algebra on 6 generators (x12, x13, x23, x11, x22, x33) over Rational Field
+    """
     # the dimension of the algebra
     dimL = n*(n-1)/2 if strict else n*(n+1)//2
 
@@ -46,7 +86,7 @@ def lie_algebra_upper_triangular_matrices(n, strict=False, field=QQ):
                 prod_dict_entry['x'+str(pr2[0])+str(pr2[1])] = -1
 
             # add the entry to the prod dictionary
-            if prod_dict_entry != {}:
+            if prod_dict_entry:
                 prod_dict[('x'+str(x)+str(y), 'x'+str(u)+str(v))
                           ] = prod_dict_entry
 
@@ -55,10 +95,25 @@ def lie_algebra_upper_triangular_matrices(n, strict=False, field=QQ):
 
 
 def standard_filiform_lie_algebra(n, field=QQ):
+    """
+    Generates a standard filiform Lie algebra.
 
-    vars = ['y'+str(k) for k in range(n-1)] + ['x']
+    Args:
+        n (int): The dimension of the Lie algebra.
+        field (Field, optional): The field over which the Lie algebra is
+        defined. Defaults to QQ.
+
+    Returns:
+        LieAlgebra: The standard filiform Lie algebra.
+
+    Examples:
+        sage: L = standard_filiform_lie_algebra(5)
+        sage: L
+        Lie algebra on 5 generators (y0, y1, y2, y3, x) over Rational Field
+    """
+    bas_strings = ['y'+str(k) for k in range(n-1)] + ['x']
     rel_dict = {('x', 'y'+str(k)): {'y'+str(k-1): 1} for k in range(1, n-1)}
-    return LieAlgebra(field, rel_dict, vars)
+    return LieAlgebra(field, rel_dict, bas_strings)
 
 
 def lie_alg_from_libgap_to_sage(lie_alg):
@@ -86,7 +141,6 @@ def lie_alg_from_libgap_to_sage(lie_alg):
 
             Lie algebra on 6 generators (x0, x1, x2, x3, x4, x5) over Rational
             Field
-
     '''
     dimL = libgap.Dimension(lie_alg).sage()
     bL = lie_alg.Basis()
@@ -105,38 +159,24 @@ def lie_alg_from_libgap_to_sage(lie_alg):
     return LieAlgebra(QQ, dicio, names=var)
 
 
-def nilpotent_lie_algebra(F, args, standard_basis=False):
-    '''
-        INPUT:
+def nilpotent_lie_algebra(F, args):
+    """
+    Generates a nilpotent Lie algebra using GAP and converts it to SageMath.
 
-            - a field, F
-            - a list with arguments, args
-            - an optional Boolean value
+    Args:
+        F (Field): The field over which the Lie algebra is defined.
+        args (list): A list of arguments for the GAP NilpotentLieAlgebra function.
+        change_basis (bool, optional): If True, changes the basis of the algebra 
+        to the basis given by the triangular_basis_lie_algebra function. Defaults to False.
 
-        OUTPUT:
+    Returns:
+        LieAlgebra: The nilpotent Lie algebra.
 
-            - a nilpotent Lie algebra
-
-        COMMENT:
-
-            This function uses the gap.NilpotentLieAlgebra function to return
-            a nilpotent Lie algebra in Gap. After that, it uses the
-            lie_alg_from_gap_to_sage function to convert that algebra, written
-            in the Gap language, to an algebra in the Sage language. If the
-            optional value of the function is True, then the function changes
-            the basis of the algebra to the basis given by the
-            triangular_basis_lie_algebra function.
-
-        EXAMPLES:
-
-            sage: L = nilpotent_lie_algebra(QQ, [6,16])
-
-            sage: L
-
-            Lie algebra on 6 generators (x0, x1, x2, x3, x4, x5) over Rational
-            Field
-
-    '''
+    Examples:
+        sage: L = nilpotent_lie_algebra(QQ, [6,16])
+        sage: L
+        Lie algebra on 6 generators (x0, x1, x2, x3, x4, x5) over Rational Field
+    """
     if not hasattr(libgap, 'NilpotentLieAlgebra'):
         libgap.LoadPackage('liealgdb')
     L = lie_alg_from_libgap_to_sage(libgap.NilpotentLieAlgebra(F, args))
@@ -144,7 +184,20 @@ def nilpotent_lie_algebra(F, args, standard_basis=False):
 
 
 def lie_alg_family_6_19(F):
+    """
+    Generates a specific family of Lie algebra with dimension 6 and index 19.
 
+    Args:
+        F (Field): The field over which the Lie algebra is defined.
+
+    Returns:
+        LieAlgebra: The Lie algebra with dimension 6 and index 19.
+
+    Examples:
+        sage: L = lie_alg_family_6_19(QQ)
+        sage: L
+        Lie algebra on 6 generators (x1, x2, x3, x4, x5, x6) over Rational Field
+    """
     K = FunctionField(F, 'ε')
     ε = K.gens()[0]
     mult_table = {('x2', 'x5'): {'x1': -1},
