@@ -63,9 +63,10 @@ def is_element_of_subalgebra(gens, p, denom=1, denom_in_t=1, Pt=False,
         Pt = PolynomialRing(FF, nr_gens, names=names)
     else:
         nr_gens = Pt.ngens()
+
     if p == 1:
         return True, Pt(1)
-    elif p == 0:
+    if p == 0:
         return True, Pt(0)
 
     # compute the leading monomials of the generators and the
