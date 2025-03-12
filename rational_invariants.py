@@ -38,7 +38,7 @@ def generators_of_kernel_triangular_derivation(d_op):
     Defining t0, t1, t2, t3
     sage: d = P.derivation( [0,t0,t1,t2] )
     sage: generators_of_kernel_triangular_derivation(d)
-    [t0, (t0*t2 - 1/2*t1^2)/t0, (t0^2*t3 - t0*t1*t2 + 1/3*t1^3)/t0^2]
+    [t0, (-1/2*t1^2 + t0*t2)/t0, (1/3*t1^3 - t0*t1*t2 + t0^2*t3)/t0^2]
     """
     # the number of generators of P
     nr_gens = len(d_op.domain().gens())
