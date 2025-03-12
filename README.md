@@ -4,7 +4,7 @@ This [SageMath](https://www.sagemath.org) module contains some functionality to 
 
 ```python
 sage: from examples_lie_algs import lie_algebra_upper_triangular_matrices
-sage: from characteristics import rational_invariant_field
+sage: from rational_invariants import rational_invariant_field
 sage: l = lie_algebra_upper_triangular_matrices( 6, strict = True )
 sage: l.rational_invariant_field()
 [x16,

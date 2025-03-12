@@ -41,7 +41,8 @@ def lie_algebra_upper_triangular_matrices(n, strict=False, field=QQ):
     Examples:
         sage: L = lie_algebra_upper_triangular_matrices(3)
         sage: L
-        Lie algebra on 6 generators (x12, x13, x23, x11, x22, x33) over Rational Field
+        Lie algebra on 6 generators (x13, x12, x23, x11, x22, x33) over
+        Rational Field
     """
     # the dimension of the algebra
     dimL = n*(n-1)/2 if strict else n*(n+1)//2
@@ -127,6 +128,8 @@ def lie_alg_from_libgap_to_sage(lie_alg):
         LieAlgebra: The Lie algebra written in SageMath.
 
     Examples:
+        sage: libgap.LoadPackage("liealgdb")
+        true
         sage: l = libgap.NilpotentLieAlgebra(QQ, [6,14])
         sage: L = lie_alg_from_libgap_to_sage(l)
         sage: L
@@ -165,7 +168,8 @@ def nilpotent_lie_algebra(F, args):
     Examples:
         sage: L = nilpotent_lie_algebra(QQ, [6,16])
         sage: L
-        Lie algebra on 6 generators (x0, x1, x2, x3, x4, x5) over Rational Field
+        Lie algebra on 6 generators (x0, x1, x2, x3, x4, x5) over Rational 
+        Field
     """
     if not hasattr(libgap, 'NilpotentLieAlgebra'):
         libgap.LoadPackage('liealgdb')
@@ -186,7 +190,8 @@ def lie_alg_family_6_19(F):
     Examples:
         sage: L = lie_alg_family_6_19(QQ)
         sage: L
-        Lie algebra on 6 generators (x1, x2, x3, x4, x5, x6) over Rational Field
+        Lie algebra on 6 generators (x1, x2, x3, x4, x5, x6) over Rational
+        function field in ε over Rational Field
     """
     K = FunctionField(F, 'ε')
     ε = K.gens()[0]
@@ -200,7 +205,9 @@ def lie_alg_family_6_19(F):
 
 
 def lie_alg_family_6_21(F):
-
+    """
+    Same as the previous function with family 21.
+    """
     K = FunctionField(F, 'ε')
     ε = K.gens()[0]
     mult_table = {('x2', 'x5'): {'x1': -1},
@@ -213,7 +220,9 @@ def lie_alg_family_6_21(F):
 
 
 def lie_alg_family_6_22(F):
-
+    """
+    Same as the previous function with family 22.
+    """
     K = FunctionField(F, 'ε')
     ε = K.gens()[0]
     mult_table = {('x3', 'x4'): {'x1': 1},
@@ -225,7 +234,9 @@ def lie_alg_family_6_22(F):
 
 
 def lie_alg_family_6_24(F):
-
+    """
+    Same as the previous function with family 24.
+    """
     K = FunctionField(F, 'ε')
     ε = K.gens()[0]
     mult_table = {('x3', 'x5'): {'x1': -1},

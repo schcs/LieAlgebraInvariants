@@ -1,3 +1,11 @@
+"""
+This module provides functions to compute rational invariants of nilpotent
+Lie algebras. It includes utilities for working with polynomial rings,
+derivations, and generating sets of invariants. The main functionality is
+to compute algebraically independent generators for the rational invariant
+field of a given nilpotent Lie algebra.
+"""
+
 from sage.all import PolynomialRing, zero_matrix, zero_vector, prod, gcd
 from sage.algebras.lie_algebras.structure_coefficients import (
     LieAlgebraWithStructureCoefficients
@@ -9,21 +17,29 @@ lie_algebra_type = LieAlgebraWithStructureCoefficients
 derivation_type = RingDerivationWithoutTwist
 
 
-def differential_operator_from_coeffs(P, coeffs):
-    r"""
-    """
-
-    D = P.derivation_module()
-    op = D.zero()
-
-    for k, _ in enumerate(coeffs):
-        op += coeffs[k]*D.gens()[k]
-
-    return op
-
-
 def generators_of_kernel_triangular_derivation(d_op):
+    """
+    Compute the generators of the kernel of a triangular derivation.
 
+    This function takes a derivation `d_op` and computes the generators of its
+    kernel. The derivation is assumed to be triangular, meaning that it has a
+    triangular action on the polynomial ring.
+
+    Parameters:
+    d_op (RingDerivationWithoutTwist): The derivation for which to compute the 
+    kernel.
+
+    Returns:
+    list: A list of generators of the kernel of the derivation.
+    
+    Example:
+    sage: P = PolynomialRing(QQ, 4, 't')
+    sage: P.inject_variables()
+    Defining t0, t1, t2, t3
+    sage: d = P.derivation( [0,t0,t1,t2] )
+    sage: generators_of_kernel_triangular_derivation(d)
+    [t0, (t0*t2 - 1/2*t1^2)/t0, (t0^2*t3 - t0*t1*t2 + 1/3*t1^3)/t0^2]
+    """
     # the number of generators of P
     nr_gens = len(d_op.domain().gens())
     P = d_op.domain()
@@ -50,7 +66,27 @@ def generators_of_kernel_triangular_derivation(d_op):
 
 
 def inject_pol_ring(lie_alg):
+    """
+    Inject a polynomial ring into the Lie algebra.
 
+    This function takes a Lie algebra and injects a polynomial ring over its
+    base field with variables corresponding to the basis elements of the Lie
+    algebra. It also sets up the fraction field of the polynomial ring.
+
+    Parameters:
+    lie_alg (LieAlgebraWithStructureCoefficients): The Lie algebra into which
+    the polynomial ring is to be injected.
+
+    Returns:
+    None
+
+    Example:
+    sage: l = lie_algebras.Heisenberg(QQ,3)
+    sage: inject_pol_ring( l )
+    sage: l.polynomialRing
+    Multivariate Polynomial Ring in p1, p2, p3, q1, q2, q3, z over Rational
+    Field
+    """
     FF = lie_alg.base_ring()
     lie_alg.polynomialRing = PolynomialRing(FF, lie_alg.dimension(),
                                             list(lie_alg.basis()),
@@ -59,7 +95,30 @@ def inject_pol_ring(lie_alg):
 
 
 def rational_invariant_field(lie_alg):
+    """
+    Compute the rational invariant field of a nilpotent Lie algebra.
 
+    This function computes a set of algebraically independent generators for
+    the rational invariant field of a given nilpotent Lie algebra. The
+    computation is based on the derivations of the Lie algebra and their
+    actions on a polynomial ring injected into the Lie algebra.
+
+    Parameters:
+    lie_alg (LieAlgebraWithStructureCoefficients): The nilpotent Lie algebra
+    for which to compute the rational invariant field.
+
+    WARNING: tHE CURRENT IMPLEMENTATION ASSUMES THAT THE LIE ALGEBRA IS GIVEN BY 
+    A TRIANGULAR BASIS STARTING FROM THE CENTRAL ELEMENTS.
+    
+    Returns:
+    list: A list of algebraically independent generators for the rational
+    invariant field of the Lie algebra.
+
+    Example:
+    sage: l = lie_algebras.Heisenberg(QQ, 3)
+    sage: rational_invariant_field(l)
+    [z]
+    """
     # setting up
     bl, l_dim = list(lie_alg.basis()), lie_alg.dimension()
     inject_pol_ring(lie_alg)
@@ -149,6 +208,22 @@ def rational_invariant_field(lie_alg):
 
 
 def reduce_gen_set(gen_set):
+    """
+    Reduce a generating set of invariants.
+
+    This function takes a set of generators for the invariant field and reduces
+    it by removing redundant elements. Specifically, it divides each generator
+    by any other generator that divides it, ensuring that the resulting set is
+    minimal.
+
+    Parameters:
+    gen_set (list): A list of generators for the invariant field.
+
+    Returns:
+    list: A reduced list of generators for the invariant field.
+
+    Example:
+    """
     nr_gens = len(gen_set)
     for i in range(nr_gens):
         for j in range(i+1, nr_gens):
