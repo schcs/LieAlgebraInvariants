@@ -117,31 +117,21 @@ def standard_filiform_lie_algebra(n, field=QQ):
 
 
 def lie_alg_from_libgap_to_sage(lie_alg):
-    '''
-        INPUT:
+    """
+    Converts a Lie algebra from GAP to SageMath.
 
-            - a Lie algebra written in Gap via libgap
+    Args:
+        lie_alg: A Lie algebra written in GAP via libgap.
 
-        OUTPUT:
+    Returns:
+        LieAlgebra: The Lie algebra written in SageMath.
 
-            - a Lie algebra written in Sage.
-
-        COMMENT:
-
-            This function converts a Lie algebra, written in the Gap language,
-            into a Lie algebra written in the Sage language.
-
-        EXAMPLES:
-
-            sage: l = libgap.NilpotentLieAlgebra(QQ, [6,14])
-
-            sage: L = lie_alg_from_gap_to_sage(l)
-
-            sage: L
-
-            Lie algebra on 6 generators (x0, x1, x2, x3, x4, x5) over Rational
-            Field
-    '''
+    Examples:
+        sage: l = libgap.NilpotentLieAlgebra(QQ, [6,14])
+        sage: L = lie_alg_from_libgap_to_sage(l)
+        sage: L
+        Lie algebra on 6 generators (x0, x1, x2, x3, x4, x5) over Rational Field
+    """
     dimL = libgap.Dimension(lie_alg).sage()
     bL = lie_alg.Basis()
     var = [f"x{i}" for i in range(dimL)]  # ['x0', ..., 'xn']
