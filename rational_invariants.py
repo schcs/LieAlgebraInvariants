@@ -6,12 +6,14 @@ to compute algebraically independent generators for the rational invariant
 field of a given nilpotent Lie algebra.
 """
 
-from sage.all import PolynomialRing, zero_matrix, zero_vector, prod, gcd
+from sage.all import (PolynomialRing, zero_matrix, zero_vector, prod, gcd,
+                      Matrix, identity_matrix)
 from sage.algebras.lie_algebras.structure_coefficients import (
     LieAlgebraWithStructureCoefficients
 )
 from sage.rings.derivation import RingDerivationWithoutTwist
 from membership_pols import is_element_of_subalgebra
+from auxfunctions import _triangular_basis_nilpotent_lie_algebra, _inject_pol_ring
 
 lie_algebra_type = LieAlgebraWithStructureCoefficients
 derivation_type = RingDerivationWithoutTwist
@@ -65,36 +67,7 @@ def generators_of_kernel_triangular_derivation(d_op):
     return gens
 
 
-def inject_pol_ring(lie_alg):
-    """
-    Inject a polynomial ring into the Lie algebra.
-
-    This function takes a Lie algebra and injects a polynomial ring over its
-    base field with variables corresponding to the basis elements of the Lie
-    algebra. It also sets up the fraction field of the polynomial ring.
-
-    Parameters:
-    lie_alg (LieAlgebraWithStructureCoefficients): The Lie algebra into which
-    the polynomial ring is to be injected.
-
-    Returns:
-    None
-
-    Example:
-    sage: l = lie_algebras.Heisenberg(QQ,3)
-    sage: inject_pol_ring( l )
-    sage: l.polynomialRing
-    Multivariate Polynomial Ring in p1, p2, p3, q1, q2, q3, z over Rational
-    Field
-    """
-    FF = lie_alg.base_ring()
-    lie_alg.polynomialRing = PolynomialRing(FF, lie_alg.dimension(),
-                                            list(lie_alg.basis()),
-                                            order="invlex")
-    lie_alg.fractionField = lie_alg.polynomialRing.fraction_field()
-
-
-def rational_invariant_field(lie_alg):
+def rational_invariant_field(lie_alg, has_triangular_basis=False):
     """
     Compute the rational invariant field of a nilpotent Lie algebra.
 
@@ -107,8 +80,8 @@ def rational_invariant_field(lie_alg):
     lie_alg (LieAlgebraWithStructureCoefficients): The nilpotent Lie algebra
     for which to compute the rational invariant field.
 
-    WARNING: tHE CURRENT IMPLEMENTATION ASSUMES THAT THE LIE ALGEBRA IS GIVEN BY 
-    A TRIANGULAR BASIS STARTING FROM THE CENTRAL ELEMENTS.
+    has_triangular_basis(bool): Indicates if the Lie algebra lie_alg is 
+    already given with a triangular basis.
     
     Returns:
     list: A list of algebraically independent generators for the rational
@@ -120,11 +93,20 @@ def rational_invariant_field(lie_alg):
     [z]
     """
     # setting up
-    bl, l_dim = list(lie_alg.basis()), lie_alg.dimension()
-    inject_pol_ring(lie_alg)
+    
+    l_dim, K = lie_alg.dimension(), lie_alg.base_ring()
+    if has_triangular_basis:
+        bl = list(lie_alg.basis())
+        basis_trans_matrix = identity_matrix(K, l_dim)
+    else:
+        bl = _triangular_basis_nilpotent_lie_algebra(lie_alg)
+        basis_trans_matrix = Matrix(K, l_dim, l_dim, [x.to_vector() for x in bl])
+    
+    _inject_pol_ring(lie_alg)
     P = lie_alg.polynomialRing
-    Pt, K = P, lie_alg.base_ring()
-
+    #P = PolynomialRing(K, l_dim, 'z')
+    Pt = P
+    
     # step 0
     # gens contains the generators of invariants after applying
     # the derivation that corresponds to the basis elements

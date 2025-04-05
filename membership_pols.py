@@ -102,8 +102,17 @@ def is_element_of_subalgebra(gens, p, denom=1, denom_in_t=1, Pt=False,
             # find the degree of lm_p in g. After several steps of reduction
             # lm_p might be a generalized monomial; that is, a monomial with
             # negative exponents.
-            lm_p_num_degree = P(lm_p.numerator()).degree(g)
-            lm_p_den_degree = P(lm_p.denominator()).degree(g)
+            if lm_p.parent() is P:
+                lm_p_num_degree = lm_p.degree(g)
+                lm_p_den_degree = P.one().degree(g)
+            else:
+                lm_p_num_degree = P(lm_p.numerator()).degree(g)
+                lm_p_den_degree = P(lm_p.denominator()).degree(g)
+            lm_p_degree_g = lm_p_num_degree - lm_p_den_degree
+            
+             
+            # lm_p_num_degree = P(lm_p.numerator()).degree(g)
+            # lm_p_den_degree = P(lm_p.denominator()).degree(g)
             lm_p_degree_g = lm_p_num_degree - lm_p_den_degree
 
             # if g occurs with positive degree update the reduction pol
