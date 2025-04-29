@@ -14,6 +14,7 @@ from sage.algebras.lie_algebras.structure_coefficients import (
 from sage.rings.derivation import RingDerivationWithoutTwist
 from membership_pols import is_element_of_subalgebra
 from auxfunctions import _triangular_basis_nilpotent_lie_algebra, _inject_pol_ring
+from dixmier import generators_of_kernel_with_dixmier_map
 
 lie_algebra_type = LieAlgebraWithStructureCoefficients
 derivation_type = RingDerivationWithoutTwist
