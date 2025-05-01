@@ -22,14 +22,16 @@ def _triangular_basis_nilpotent_lie_algebra(lie_alg):
         sage: basis
         [x5, x4, x3, x2, x0, x1]
     """
+
     
-    ucs = [lie_alg.ideal()] + lie_alg.upper_central_series()
-    nr_quots = len(ucs)-1
     bas = []
-    for i in range(nr_quots):
-        quot = ucs[i+1].quotient(ucs[i].gens())
-        bas += [quot.lift(x) for x in quot.basis()]
-        
+    while True:
+        q = lie_alg.quotient(bas)
+        if q.dimension() == 0:
+            break
+        c = q.center()
+        bas += [q.lift(x) for x in c.basis()]
+
     return bas
 
 

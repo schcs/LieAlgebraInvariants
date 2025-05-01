@@ -19,6 +19,13 @@ lie_algebra_type = LieAlgebraWithStructureCoefficients
 derivation_type = RingDerivationWithoutTwist
 
 
+def _lie_alg_element_to_pol(x):
+
+    lie_alg = x.parent()
+    P = lie_alg.polynomialRing
+    mons_x = x.monomial_coefficients()
+    return sum(mons_x[x]*P(x) for x in mons_x)
+
 def generators_of_kernel_triangular_derivation(d_op):
     """
     Compute the generators of the kernel of a triangular derivation.
@@ -98,19 +105,25 @@ def rational_invariant_field(lie_alg, has_triangular_basis=False):
     if has_triangular_basis:
         bl = list(lie_alg.basis())
         basis_trans_matrix = identity_matrix(K, l_dim)
+        basis_trans_matrix_inv = identity_matrix(K, l_dim)
     else:
         bl = _triangular_basis_nilpotent_lie_algebra(lie_alg)
         basis_trans_matrix = Matrix(K, l_dim, l_dim, [x.to_vector() for x in bl])
-    
-    _inject_pol_ring(lie_alg)
-    P = lie_alg.polynomialRing
-    #P = PolynomialRing(K, l_dim, 'z')
+        basis_trans_matrix_inv = basis_trans_matrix**-1
+    # basis trans_matrix contains the matrix of the identity 
+    # transformation in the bases bl -> standard basis
+
+    # new polynomial ring whose generators correspond to the 
+    # element in bl
+    P = PolynomialRing(K, l_dim, 'z')
     Pt = P
+    assert _inject_pol_ring(lie_alg)
     
     # step 0
     # gens contains the generators of invariants after applying
     # the derivation that corresponds to the basis elements
     gens = P.gens()
+    #subs = dict(zip(gens, bl))
 
     # table contains how each derivation acts on the current generating set
     # the initial generating set is the basis of l, so initually, this
@@ -121,14 +134,16 @@ def rational_invariant_field(lie_alg, has_triangular_basis=False):
             # essentially,
             # table[x, y] = P(l.bracket(bl[x], bl[y]))
             # however, this does not work over more complicated fields
-            lprod = lie_alg.bracket(bl[x], bl[y])
-            prod_dict = lprod.monomial_coefficients()
-            table[x, y] = sum(prod_dict[k]*P(k) for k in prod_dict)
+            lprod_vect = lie_alg.bracket(bl[x], bl[y]).to_vector()
+            # write l_prod vect as l.c. in the triangular basis
+            lprod_bl = lprod_vect*basis_trans_matrix_inv
+            table[x, y] = sum(lprod_bl[k]*Pt.gens()[k] for k in range(l_dim))
     # set up initial denominator and substitution
     denom, subs = Pt(1), {}
 
     # start computation here
     for k in range(lie_alg.dimension()):
+        print(k)
         # compute the new substitution. subs contains at each step, the
         # expressions for the generators in terms of the original generators
         subs = dict(zip(Pt.gens(), [x.subs(subs) for x in gens]))
@@ -186,7 +201,24 @@ def rational_invariant_field(lie_alg, has_triangular_basis=False):
         table = newtable
 
     # return the final generating set under substitution by subs
-    return [x.subs(subs) for x in gens]
+    P_lie_alg = lie_alg.polynomialRing
+    gens_subs = [x.subs(subs) for x in gens]
+    if not has_triangular_basis:
+        z_subs = dict(zip(P.gens(),[_lie_alg_element_to_pol(x) for x in bl]))
+        gens_subs = [x.subs(z_subs) for x in gens_subs] 
+
+    return gens_subs 
+
+    print( "checking final result!!!")
+    l_basis = list(lie_alg.basis())
+    for i in range(l_dim):
+        der_coeffs = [_lie_alg_element_to_pol(lie_alg.bracket(l_basis[i],l_basis[j])) for j in range(l_dim)]
+        der = P_lie_alg.derivation(der_coeffs)
+        for j in gens_subs:
+            if der(j) != 0:
+                raise("error!!! Wrong generator!!!")
+
+    return gens_subs
 
 
 def reduce_gen_set(gen_set):
