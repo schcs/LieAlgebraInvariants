@@ -7,17 +7,62 @@ field of a given nilpotent Lie algebra.
 """
 
 from sage.all import (PolynomialRing, zero_matrix, zero_vector, prod, gcd,
-                      Matrix, identity_matrix)
+                      Matrix, identity_matrix, Parent, UniqueRepresentation, 
+                      Fields)
 from sage.algebras.lie_algebras.structure_coefficients import (
-    LieAlgebraWithStructureCoefficients
-)
+    LieAlgebraWithStructureCoefficients)
 from sage.rings.derivation import RingDerivationWithoutTwist
 from membership_pols import is_element_of_subalgebra
-from auxfunctions import _triangular_basis_nilpotent_lie_algebra, _inject_pol_ring
+from auxfunctions import (
+    _triangular_basis_nilpotent_lie_algebra,
+    _inject_pol_ring)
 from dixmier import generators_of_kernel_with_dixmier_map
 
 lie_algebra_type = LieAlgebraWithStructureCoefficients
 derivation_type = RingDerivationWithoutTwist
+
+
+class RationalInvariantField(Parent, UniqueRepresentation):
+    """
+    A class to represent the rational invariant field of a nilpotent 
+    Lie algebra.
+
+    This class provides methods to compute and manipulate the rational 
+    invariant field of a given nilpotent Lie algebra. It inherits from 
+    Sage's Parent and UniqueRepresentation classes.
+    """
+
+    def __init__(self, lie_algebra, has_triangular_basis=False):
+        """
+        Initialize the RationalInvariantField object.
+
+        Parameters:
+        lie_algebra (LieAlgebraWithStructureCoefficients): The nilpotent Lie 
+        algebra. has_triangular_basis (bool): Indicates if the Lie algebra is 
+        already given with a triangular basis.
+        """
+        self._lie_algebra = lie_algebra
+        self._has_triangular_basis = has_triangular_basis
+        self._generators = None
+        Parent.__init__(self, category=Fields())
+
+    def _repr_(self):
+        """
+        Return a string representation of the RationalInvariantField object.
+        """
+        return f"Rational Invariant Field of {self._lie_algebra}"
+
+    def generators(self):
+        """
+        Compute and return the generators of the rational invariant field.
+
+        Returns:
+        list: A list of algebraically independent generators.
+        """
+        if self._generators is None:
+            self._generators = rational_invariant_field(self._lie_algebra,
+                                               self._has_triangular_basis)
+        return self._generators
 
 
 def _lie_alg_element_to_pol(x):
@@ -26,6 +71,7 @@ def _lie_alg_element_to_pol(x):
     P = lie_alg.polynomialRing
     mons_x = x.monomial_coefficients()
     return sum(mons_x[x]*P(x) for x in mons_x)
+
 
 def generators_of_kernel_triangular_derivation(d_op):
     """
@@ -41,7 +87,7 @@ def generators_of_kernel_triangular_derivation(d_op):
 
     Returns:
     list: A list of generators of the kernel of the derivation.
-    
+
     Example:
     sage: P = PolynomialRing(QQ, 4, 't')
     sage: P.inject_variables()
@@ -101,7 +147,7 @@ def rational_invariant_field(lie_alg, has_triangular_basis=False):
     [z]
     """
     # setting up
-    
+
     l_dim, K = lie_alg.dimension(), lie_alg.base_ring()
     if has_triangular_basis:
         bl = list(lie_alg.basis())
@@ -109,7 +155,8 @@ def rational_invariant_field(lie_alg, has_triangular_basis=False):
         basis_trans_matrix_inv = identity_matrix(K, l_dim)
     else:
         bl = _triangular_basis_nilpotent_lie_algebra(lie_alg)
-        basis_trans_matrix = Matrix(K, l_dim, l_dim, [x.to_vector() for x in bl])
+        basis_trans_matrix = Matrix(K, l_dim, l_dim,
+                                    [x.to_vector() for x in bl])
         basis_trans_matrix_inv = basis_trans_matrix**-1
     # basis trans_matrix contains the matrix of the identity 
     # transformation in the bases bl -> standard basis
@@ -124,7 +171,6 @@ def rational_invariant_field(lie_alg, has_triangular_basis=False):
     # gens contains the generators of invariants after applying
     # the derivation that corresponds to the basis elements
     gens = P.gens()
-    #subs = dict(zip(gens, bl))
 
     # table contains how each derivation acts on the current generating set
     # the initial generating set is the basis of l, so initually, this
@@ -144,7 +190,6 @@ def rational_invariant_field(lie_alg, has_triangular_basis=False):
 
     # start computation here
     for k in range(lie_alg.dimension()):
-        print(k)
         # compute the new substitution. subs contains at each step, the
         # expressions for the generators in terms of the original generators
         subs = dict(zip(Pt.gens(), [x.subs(subs) for x in gens]))
@@ -202,22 +247,10 @@ def rational_invariant_field(lie_alg, has_triangular_basis=False):
         table = newtable
 
     # return the final generating set under substitution by subs
-    P_lie_alg = lie_alg.polynomialRing
     gens_subs = [x.subs(subs) for x in gens]
     if not has_triangular_basis:
-        z_subs = dict(zip(P.gens(),[_lie_alg_element_to_pol(x) for x in bl]))
+        z_subs = dict(zip(P.gens(), [_lie_alg_element_to_pol(x) for x in bl]))
         gens_subs = [x.subs(z_subs) for x in gens_subs] 
-
-    return gens_subs 
-
-    print( "checking final result!!!")
-    l_basis = list(lie_alg.basis())
-    for i in range(l_dim):
-        der_coeffs = [_lie_alg_element_to_pol(lie_alg.bracket(l_basis[i],l_basis[j])) for j in range(l_dim)]
-        der = P_lie_alg.derivation(der_coeffs)
-        for j in gens_subs:
-            if der(j) != 0:
-                raise("error!!! Wrong generator!!!")
 
     return gens_subs
 

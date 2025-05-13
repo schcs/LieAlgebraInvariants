@@ -1,4 +1,4 @@
-from sage.all import PolynomialRing 
+from sage.all import PolynomialRing
 
 
 def _triangular_basis_nilpotent_lie_algebra(lie_alg):
@@ -7,15 +7,15 @@ def _triangular_basis_nilpotent_lie_algebra(lie_alg):
     This function calculates a basis for a nilpotent Lie algebra using its 
     upper central series. The basis is constructed by lifting elements 
     from the quotient spaces of consecutive terms in the upper central series.
-    
+
     Args:
         l: A Lie algebra object that provides methods for computing the 
            ideal, upper central series, and quotient spaces.
-    
+
     Returns:
         list: A list of elements forming a triangular basis for the nilpotent 
               Lie algebra.
-    
+
     Examples:
         sage: L = nilpotent_lie_algebra(QQ, [6, 14])
         sage: basis = _triangular_basis_nilpotent_lie_algebra(L)
@@ -23,7 +23,6 @@ def _triangular_basis_nilpotent_lie_algebra(lie_alg):
         [x5, x4, x3, x2, x0, x1]
     """
 
-    
     bas = []
     while True:
         q = lie_alg.quotient(bas)
