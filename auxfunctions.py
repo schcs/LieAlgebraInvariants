@@ -34,31 +34,32 @@ def _triangular_basis_nilpotent_lie_algebra(lie_alg):
     return bas
 
 
-def _inject_pol_ring(lie_alg):
+def _polynomial_ring(lie_alg):
     """
-    Inject a polynomial ring into the Lie algebra.
+    Return the polynomial ring of a Lie algebra.
 
-    This function takes a Lie algebra and injects a polynomial ring over its
+    This function takes a Lie algebra and returns a polynomial ring over its
     base field with variables corresponding to the basis elements of the Lie
     algebra. It also sets up the fraction field of the polynomial ring.
 
     Parameters:
     lie_alg (LieAlgebraWithStructureCoefficients): The Lie algebra into which
-    the polynomial ring is to be injected.
+    the polynomial ring is to be returned.
 
     Returns:
     True
 
     Example:
     sage: l = lie_algebras.Heisenberg(QQ,3)
-    sage: inject_pol_ring(l)
-    sage: l.polynomialRing
+    sage: _polynomialRing(l)
     Multivariate Polynomial Ring in p1, p2, p3, q1, q2, q3, z over Rational
     Field
     """
-    FF = lie_alg.base_ring()
-    lie_alg.polynomialRing = PolynomialRing(FF, lie_alg.dimension(),
-                                            list(lie_alg.basis()),
-                                            order="invlex")
-    lie_alg.fractionField = lie_alg.polynomialRing.fraction_field()
-    return True
+    if not hasattr(lie_alg, "polynomialRing"):    
+        FF = lie_alg.base_ring()
+        lie_alg.polynomialRing = PolynomialRing(FF, lie_alg.dimension(),
+                                                list(lie_alg.basis()),
+                                                order="invlex")
+        lie_alg.fractionField = lie_alg.polynomialRing.fraction_field()
+
+    return lie_alg.polynomialRing

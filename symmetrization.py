@@ -21,4 +21,4 @@ def _symmetrization_mon(uea, mon):
 def symmetrization(uea, pol):
     F = uea.base_ring()
     mons = pol.monomials()
-    return sum(F(pol.coefficient(m))*_symmetrization_mon(uea, m) for m in mons)
+    return sum(F(pol.monomial_coefficient(m))*_symmetrization_mon(uea, m) for m in mons)

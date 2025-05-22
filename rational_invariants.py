@@ -13,9 +13,7 @@ from sage.algebras.lie_algebras.structure_coefficients import (
     LieAlgebraWithStructureCoefficients)
 from sage.rings.derivation import RingDerivationWithoutTwist
 from membership_pols import is_element_of_subalgebra
-from auxfunctions import (
-    _triangular_basis_nilpotent_lie_algebra,
-    _inject_pol_ring)
+from auxfunctions import _triangular_basis_nilpotent_lie_algebra, _polynomial_ring
 from dixmier import generators_of_kernel_with_dixmier_map
 
 lie_algebra_type = LieAlgebraWithStructureCoefficients
@@ -43,6 +41,7 @@ class RationalInvariantField(Parent, UniqueRepresentation):
         """
         self._lie_algebra = lie_algebra
         self._has_triangular_basis = has_triangular_basis
+        self._polynomial_ring = _polynomial_ring(lie_algebra)
         self._generators = None
         Parent.__init__(self, category=Fields())
 
@@ -64,11 +63,32 @@ class RationalInvariantField(Parent, UniqueRepresentation):
                                                self._has_triangular_basis)
         return self._generators
 
+    def __contains__(self, element):
+        """
+        Check if a rational function lies in the rational invariant field.
+
+        Parameters:
+        element: The rational function to check.
+
+        Returns:
+        bool: True if the element is in the rational invariant field, 
+              False otherwise.
+        """
+
+        P = self._polynomial_ring
+        basis = self._lie_algebra.basis()
+        for b in basis:
+            der_coeffs = [P(self._lie_algebra.bracket(b, x)) for x in basis]
+            der = P.derivation(der_coeffs)
+            if der(element) != 0:
+                return False
+        return True
+
 
 def _lie_alg_element_to_pol(x):
 
     lie_alg = x.parent()
-    P = lie_alg.polynomialRing
+    P = _polynomial_ring(lie_alg)
     mons_x = x.monomial_coefficients()
     return sum(mons_x[x]*P(x) for x in mons_x)
 
@@ -165,8 +185,7 @@ def rational_invariant_field(lie_alg, has_triangular_basis=False):
     # element in bl
     P = PolynomialRing(K, l_dim, 'z')
     Pt = P
-    assert _inject_pol_ring(lie_alg)
-    
+
     # step 0
     # gens contains the generators of invariants after applying
     # the derivation that corresponds to the basis elements
