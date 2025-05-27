@@ -8,60 +8,103 @@ field of a given nilpotent Lie algebra.
 
 from sage.all import (PolynomialRing, zero_matrix, zero_vector, prod, gcd,
                       Matrix, identity_matrix, Parent, UniqueRepresentation, 
-                      Fields)
+                      Fields, FractionField)
 from sage.algebras.lie_algebras.structure_coefficients import (
     LieAlgebraWithStructureCoefficients)
 from sage.rings.derivation import RingDerivationWithoutTwist
 from membership_pols import is_element_of_subalgebra
 from auxfunctions import _triangular_basis_nilpotent_lie_algebra, _polynomial_ring
 from dixmier import generators_of_kernel_with_dixmier_map
+from sage.structure.parent import Parent
+from sage.structure.unique_representation import UniqueRepresentation
+from sage.categories.fields import Fields
+from sage.rings.fraction_field import FractionField
+
 
 lie_algebra_type = LieAlgebraWithStructureCoefficients
 derivation_type = RingDerivationWithoutTwist
 
 
-class RationalInvariantField(Parent, UniqueRepresentation):
-    """
-    A class to represent the rational invariant field of a nilpotent 
-    Lie algebra.
-
-    This class provides methods to compute and manipulate the rational 
-    invariant field of a given nilpotent Lie algebra. It inherits from 
-    Sage's Parent and UniqueRepresentation classes.
-    """
-
+class RationalInvariantField(Field):
     def __init__(self, lie_algebra, has_triangular_basis=False):
-        """
-        Initialize the RationalInvariantField object.
-
-        Parameters:
-        lie_algebra (LieAlgebraWithStructureCoefficients): The nilpotent Lie 
-        algebra. has_triangular_basis (bool): Indicates if the Lie algebra is 
-        already given with a triangular basis.
-        """
+        base_ring = lie_algebra.base_ring()
+        Field.__init__(self, base_ring, category=Fields())
+        
         self._lie_algebra = lie_algebra
         self._has_triangular_basis = has_triangular_basis
-        self._polynomial_ring = _polynomial_ring(lie_algebra)
-        self._generators = None
-        Parent.__init__(self, category=Fields())
+        self._ambient = _polynomial_ring(lie_algebra)
+        gens_in_symspace = rational_invariant_field(lie_algebra,
+                                               has_triangular_basis)
+        self._gens_in_symspace = gens_in_symspace
+        nr_gens = len(gens_in_symspace)
+        self._gens = tuple(var('t'+str(i)) for i in range(nr_gens))
 
+        if not gens_in_symspace:
+            raise ValueError("The Lie algebra does not have a rational "
+                             "invariant field.")
+        # Create the polynomial ring over the base field of the Lie algebra
+        
+        self._base_ring = base_ring
+        
+        #self.lift = self.hom([gens_in_symspace], check=False)  
+        # Make this act like a method using the generators in the symmetric space
+        #self.lift.register_as_coercion()
+
+    def lift(self):
+        return self.hom(self._gens_in_symspace, check=False)
+
+    def to_symmetric_space(self, elt):
+        return self.hom(elt, check=False)
+    
+    def ngens(self):
+        """
+        Return the number of generators of the rational invariant field.
+        """
+        return len(self._gens)
+    def coerce(self, elt):
+        """
+        Coerce an element into the rational invariant field.
+
+        Parameters:
+        elt: The element to coerce into the rational invariant field.
+
+        Returns:
+        Polynomial: The coerced element as a polynomial in the rational
+        invariant field.
+        """
+        if isinstance(elt, self._ambient):
+            return elt
+        elif isinstance(elt, self._base_ring):
+            return self._ambient(elt)
+        elif isinstance(elt, Parent):
+            if elt.is_field():
+                return self._ambient(elt)
+            else:
+                raise TypeError("Cannot coerce element of type {} into "
+                                "RationalInvariantField.".format(type(elt)))
+        else:
+            raise TypeError("Cannot coerce element of type {} into "
+                            "RationalInvariantField.".format(type(elt)))
+    
+    def gen(self, i):
+        """
+        Return the i-th generator of the rational invariant field.
+        
+        Parameters:
+        i (int): The index of the generator to return.
+
+        Returns:
+        Polynomial: The i-th generator of the rational invariant field.
+        """
+        if i < 0 or i >= self.ngens():
+            raise IndexError("Generator index out of range.")
+        return self._gens[i]
+    
     def _repr_(self):
         """
         Return a string representation of the RationalInvariantField object.
         """
         return f"Rational Invariant Field of {self._lie_algebra}"
-
-    def generators(self):
-        """
-        Compute and return the generators of the rational invariant field.
-
-        Returns:
-        list: A list of algebraically independent generators.
-        """
-        if self._generators is None:
-            self._generators = rational_invariant_field(self._lie_algebra,
-                                               self._has_triangular_basis)
-        return self._generators
 
     def __contains__(self, element):
         """
