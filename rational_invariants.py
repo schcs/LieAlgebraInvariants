@@ -6,20 +6,13 @@ to compute algebraically independent generators for the rational invariant
 field of a given nilpotent Lie algebra.
 """
 
-from sage.algebras.lie_algebras.structure_coefficients import (
-    LieAlgebraWithStructureCoefficients)
-from sage.rings.derivation import RingDerivationWithoutTwist
 from membership_pols import is_element_of_subalgebra
-from auxfunctions import _triangular_basis_nilpotent_lie_algebra, _polynomial_ring
-from dixmier import generators_of_kernel_with_dixmier_map
-from sage.structure.parent import Parent
+from auxfunctions import (_triangular_basis_nilpotent_lie_algebra,
+                          _polynomial_ring)
+# from dixmier import generators_of_kernel_with_dixmier_map
 from sage.structure.unique_representation import UniqueRepresentation
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.fraction_field import FractionField, FractionField_generic
-
-
-lie_algebra_type = LieAlgebraWithStructureCoefficients
-derivation_type = RingDerivationWithoutTwist
+from sage.rings.fraction_field import FractionField_generic
 
 
 class RationalInvariantField(FractionField_generic, UniqueRepresentation):
@@ -32,15 +25,14 @@ class RationalInvariantField(FractionField_generic, UniqueRepresentation):
         self._symspace_gens = self._compute_symspace_gens()
 
         if not self._symspace_gens:
-            raise ValueError("the Lie algebra does not have a rational "
-                             "invariant field")
+            raise ValueError("Could not compute the rational "
+                             "invariant field for this Lie algebra")
         ngens = len(self._symspace_gens)
         R = PolynomialRing(self._lie_algebra.base_ring(), 't', ngens)
         FractionField_generic.__init__(self, R)
 
         SF = self._symspace_gens[0].parent().fraction_field()
         self.lift = self.hom([SF(g) for g in self._symspace_gens], check=False)
-        # Make this act like a method using the generators in the symmetric space
         self.lift.register_as_coercion()
 
     def to_symmetric_space(self, elt):
@@ -48,46 +40,44 @@ class RationalInvariantField(FractionField_generic, UniqueRepresentation):
 
     def symmetric_space(self):
         return self._symspace_gens[0].parent()
-    
+
     def _repr_(self):
         """
         Return a string representation of the RationalInvariantField object.
         """
         return f"Rational Invariant Field of {self._lie_algebra}"
 
-    def __contains__(self, element):
-        """
-        Check if ``element`` lies in ``self``.
-
-        INPUT:
-        
-        - ``element`` -- the rational function to check
-        """
-        P = self._polynomial_ring
-        basis = self._lie_algebra.basis()
-        for b in basis:
-            der_coeffs = [P(self._lie_algebra.bracket(b, x)) for x in basis]
-            der = P.derivation(der_coeffs)
-            if der(element):
-                return False
-        return True
+#    def __contains__(self, element):
+#        """
+#        Check if ``element`` lies in ``self``.
+#
+#        INPUT:
+#
+#        - ``element`` -- the rational function to check
+#        """
+#        P = self._polynomial_ring
+#        basis = self._lie_algebra.basis()
+#        for b in basis:
+#            der_coeffs = [P(self._lie_algebra.bracket(b, x)) for x in basis]
+#            der = P.derivation(der_coeffs)
+#            if der(element):
+#                return False
+#        return True
 
     def _compute_symspace_gens(self):
         """
-        Compute the rational invariant field of a nilpotent Lie algebra.
-    
-        This function computes a set of algebraically independent generators for
-        the rational invariant field of a given nilpotent Lie algebra. The
+        This method computes a set of algebraically independent generators
+        for the rational invariant field of a given nilpotent Lie algebra. The
         computation is based on the derivations of the Lie algebra and their
         actions on a polynomial ring injected into the Lie algebra.
 
         OUTPUT:
-        
+
         A list of algebraically independent generators for the rational
         invariant field of the Lie algebra.
-    
+
         EXAMPLES::
-        
+
             sage: l = lie_algebras.Heisenberg(QQ, 3)
             sage: rational_invariant_field(l)
             [z]
@@ -100,7 +90,7 @@ class RationalInvariantField(FractionField_generic, UniqueRepresentation):
         lie_alg = self._lie_algebra
         l_dim = lie_alg.dimension()
         K = lie_alg.base_ring()
-      
+
         if self._has_triangular_basis:
             bl = list(lie_alg.basis())
             from sage.matrix.special import identity_matrix
@@ -112,19 +102,19 @@ class RationalInvariantField(FractionField_generic, UniqueRepresentation):
             basis_trans_matrix = Matrix(K, l_dim, l_dim,
                                         [x.to_vector() for x in bl])
             basis_trans_matrix_inv = basis_trans_matrix.inverse()
-        # basis trans_matrix contains the matrix of the identity 
+        # basis trans_matrix contains the matrix of the identity
         # transformation in the bases bl -> standard basis
-    
-        # new polynomial ring whose generators correspond to the 
+
+        # new polynomial ring whose generators correspond to the
         # element in bl
         P = PolynomialRing(K, l_dim, 'z')
         Pt = P
-    
+
         # step 0
         # gens contains the generators of invariants after applying
         # the derivation that corresponds to the basis elements
         gens = P.gens()
-    
+
         # table contains how each derivation acts on the current generating set
         # the initial generating set is the basis of l, so initually, this
         # is just the multiplication table
@@ -137,76 +127,81 @@ class RationalInvariantField(FractionField_generic, UniqueRepresentation):
                 lprod_vect = lie_alg.bracket(bl[x], bl[y]).to_vector()
                 # write l_prod vect as l.c. in the triangular basis
                 lprod_bl = lprod_vect*basis_trans_matrix_inv
-                table[x, y] = sum(lprod_bl[k]*Pt.gens()[k] for k in range(l_dim))
+                table[x, y] = sum(lprod_bl[k]*Pt.gens()[k]
+                                  for k in range(l_dim))
         # set up initial denominator and substitution
         denom = Pt.one()
         subs = {}
-    
+
         # start computation here
         for k in range(lie_alg.dimension()):
             # compute the new substitution. subs contains at each step, the
-            # expressions for the generators in terms of the original generators
+            # expressions for the generators in terms of the original
+            # generators
             subs = dict(zip(Pt.gens(), [x.subs(subs) for x in gens]))
-    
+
             # the current derivation is the derivation of Pt whose coefficients
             # are in the k-th line of table
             d = Pt.derivation(list(table[k]))
-    
+
             # denom is the first non-zero coefficient of d
             denom = Pt(next((x for x in table[k] if x), Pt(1)))
-    
-            # compute the generators of the kernel of d and take their enumerators
-            # this is valid, since the denominators are invariants
+
+            # compute the generators of the kernel of d and take their
+            # enumerators this is valid, since the denominators are invariants
             gens = [Pt(x.numerator())
                     for x in generators_of_kernel_triangular_derivation(d)]
-    
+
             # construct the new ring Pt whose rank is len(gens)
             # and remember the old Pt as oldPt
             oldPt, Pt = Pt, PolynomialRing(K, len(gens), 't', order='invlex')
             Ft = Pt.fraction_field()
-    
+
             # recompute the table for the action of the derivations on the new
             # generating set
             newtable = zero_matrix(Pt, l_dim, len(gens))
-    
+
             # compute the derivations of l as they act on the generators
             l_derivations = {x: oldPt.derivation(list(table[x]))
                              for x in range(k, l_dim)}
-    
+
             # write the denominator as polynomial in the new generators
             # does this always work???
             denom_in_t = is_element_of_subalgebra(gens, denom, 1, Pt=Pt)[1]
-    
+
             for y in range(len(gens)):
                 coeffvec = zero_vector(Ft, l_dim)
                 for x in range(k, l_dim):
                     # compute the image of gens[y] under l_derivation[x] as
                     # expressions in the generators
-                    dxy_in_t = is_element_of_subalgebra(gens,
-                                                        l_derivations[x](gens[y]),
-                                                        denom,
-                                                        denom_in_t=denom_in_t,
-                                                        Pt=Pt)
+                    dxy_in_t = is_element_of_subalgebra(
+                        gens,
+                        l_derivations[x](gens[y]),
+                        denom,
+                        denom_in_t=denom_in_t,
+                        Pt=Pt)
                     # put it into coeffvec
                     coeffvec[x] = Ft(dxy_in_t[1])
                 # compute the denominators and multiply everything with the lcm
                 # of the denominators
                 list_denoms = [x.denominator() for x in coeffvec]
-                lcm_denom = prod(list_denoms) / gcd(list_denoms)
+                lcm_denom = prod(list_denoms) / GCD(list_denoms)
                 if lcm_denom != 1:
                     gens[y] *= lcm_denom
                     coeffvec *= lcm_denom
                 newtable[:, y] = coeffvec
             # update table
             table = newtable
-    
+
         # return the final generating set under substitution by subs
         gens_subs = [x.subs(subs) for x in gens]
         if not self._has_triangular_basis:
-            z_subs = dict(zip(P.gens(), [_lie_alg_element_to_pol(x) for x in bl]))
-            gens_subs = [x.subs(z_subs) for x in gens_subs] 
-    
+            z_subs = dict(zip(P.gens(),
+                              [_lie_alg_element_to_pol(x) for x in bl]))
+            gens_subs = [x.subs(z_subs) for x in gens_subs]
+
         return gens_subs
+
 
 def _lie_alg_element_to_pol(x):
     lie_alg = x.parent()
@@ -219,9 +214,9 @@ def generators_of_kernel_triangular_derivation(d_op):
     """
     Compute the generators of the kernel of a triangular derivation.
 
-    This function takes a derivation ``d_op`` and computes the generators of its
-    kernel. The derivation is assumed to be triangular, meaning that it has a
-    triangular action on the polynomial ring.
+    This function takes a derivation ``d_op`` and computes the generators of
+    its kernel. The derivation is assumed to be triangular, meaning that it
+    has a triangular action on the polynomial ring.
 
     INPUT:
 
@@ -267,6 +262,7 @@ def generators_of_kernel_triangular_derivation(d_op):
 
     return gens
 
+
 def reduce_gen_set(gen_set):
     """
     Reduce a generating set of invariants.
@@ -291,8 +287,3 @@ def reduce_gen_set(gen_set):
                 gen_set[j] //= gen_set[i]
 
     return gen_set
-
-# Monkey patching
-setattr(derivation_type, "generators_of_kernel",
-        generators_of_kernel_triangular_derivation)
-setattr(lie_algebra_type, 'rational_invariant_field', RationalInvariantField)
