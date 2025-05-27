@@ -191,7 +191,8 @@ class RationalInvariantField(FractionField_generic, UniqueRepresentation):
                     coeffvec[x] = Ft(dxy_in_t[1])
                 # compute the denominators and multiply everything with the lcm
                 # of the denominators
-                lcm_denom = prod(list_denoms) / gcd(x.denominator() for x in coeffvec)
+                list_denoms = [x.denominator() for x in coeffvec]
+                lcm_denom = prod(list_denoms) / gcd(list_denoms)
                 if lcm_denom != 1:
                     gens[y] *= lcm_denom
                     coeffvec *= lcm_denom
