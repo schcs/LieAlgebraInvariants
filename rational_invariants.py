@@ -144,7 +144,7 @@ def rational_invariant_field(lie_alg, has_triangular_basis=False):
 
     # start computation here
     for k in range(lie_alg.dimension()):
-        print(k)
+        
         # compute the new substitution. subs contains at each step, the
         # expressions for the generators in terms of the original generators
         subs = dict(zip(Pt.gens(), [x.subs(subs) for x in gens]))
@@ -158,8 +158,9 @@ def rational_invariant_field(lie_alg, has_triangular_basis=False):
 
         # compute the generators of the kernel of d and take their enumerators
         # this is valid, since the denominators are invariants
+        
         gens = [Pt(x.numerator())
-                for x in generators_of_kernel_triangular_derivation(d)]
+                for x in generators_of_kernel_with_dixmier_map(d)]
 
         # construct the new ring Pt whose rank is len(gens)
         # and remember the old Pt as oldPt
