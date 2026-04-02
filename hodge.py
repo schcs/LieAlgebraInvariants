@@ -32,7 +32,9 @@ def factors_of_diff_form(M,f):
         fw = f.wedge(di)
         mat[i,:] = [[fw[ind] for ind in index_sets]]
 
-    return mat
+    ker = mat.left_kernel().basis()
+    ker = Matrix([LCM(x.denominator() for x in z)*z for z in ker])    
+    return ker
 
 
 
@@ -127,7 +129,7 @@ def polynomial_from_gradient(grad, gens=None, constant=None, check=True):
     return f
  
 
-def make_it_gradient(vec, gradients):
+def make_it_gradient(vec, gradients, check=True):
 
     # pivots contains the indices of the last nonzero entry in each vector in gradients
     pivots = [next((k for k in range(len(g) - 1, -1, -1) if g[k] != 0), -1) for g in gradients]
@@ -138,7 +140,7 @@ def make_it_gradient(vec, gradients):
     dim = len(vec)
     Pgens = P.gens()
 
-    for k in range(dim-1, -1, -1): # backwards from dim-1 to 0
+    for k in range(dim): # backwards from dim-1 to 0
 
         # compute the k-th partial derivatives of vec[0], ..., vec[k-1]
         ders_vj_dk = [ders[k](vec[j]) for j in range(dim)]
@@ -160,7 +162,7 @@ def make_it_gradient(vec, gradients):
             vec = coeff_vec*vec + entry_integral*grad
 
             assert ders[k](vec[j]) == ders[j](vec[k])
-
-    assert is_gradient(vec)  
+    if check:
+        assert is_gradient(vec)[0]
 
     return vec

@@ -47,22 +47,22 @@ class RationalInvariantField(FractionField_generic, UniqueRepresentation):
         """
         return f"Rational Invariant Field of {self._lie_algebra}"
 
-#    def __contains__(self, element):
-#        """
-#        Check if ``element`` lies in ``self``.
-#
-#        INPUT:
-#
-#        - ``element`` -- the rational function to check
-#        """
-#        P = self._polynomial_ring
-#        basis = self._lie_algebra.basis()
-#        for b in basis:
-#            der_coeffs = [P(self._lie_algebra.bracket(b, x)) for x in basis]
-#            der = P.derivation(der_coeffs)
-#            if der(element):
-#                return False
-#        return True
+    def __contains__(self, element):
+        """
+        Check if ``element`` lies in ``self``.
+
+        INPUT:
+
+        - ``element`` -- the rational function to check
+        """
+        P = self._polynomial_ring
+        basis = self._lie_algebra.basis()
+        for b in basis:
+            der_coeffs = [P(self._lie_algebra.bracket(b, x)) for x in basis]
+            der = P.derivation(der_coeffs)
+            if der(element):
+                return False
+        return True
 
     def _compute_symspace_gens(self):
         """

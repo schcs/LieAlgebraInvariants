@@ -22,6 +22,7 @@ dimension 6 and index 19, 21, 22, 24 in the paper by Cicalo-de Graaf-Schneder
 """
 
 from sage.all import QQ, LieAlgebra, libgap, FunctionField
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 
 
 def lie_algebra_upper_triangular_matrices(n, strict=False, field=QQ):
@@ -246,3 +247,11 @@ def lie_alg_family_6_24(F):
                   ('x5', 'x6'): {'x3': 1}}
 
     return LieAlgebra(K, mult_table, names='x1,x2,x3,x4,x5,x6')
+
+
+def down_opertor(n, field=QQ):
+    P = PolynomialRing(field, 'y', n)
+    coeffs = (0,)+P.gens()[:n-1]
+    return P.derivation(coeffs)
+    
+
