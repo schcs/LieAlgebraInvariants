@@ -1,3 +1,41 @@
+from itertools import combinations
+from auxfunctions import _polynomial_ring
+
+
+def omega_form(l):
+    pass
+
+    n = l.dimension()
+    P = _polynomial_ring(l)
+    M = EuclideanSpace(n)
+    f = M.diff_form(2)
+    basis = list(l.basis().keys())
+    struct_coeffs = l.structure_coefficients()
+    for i in range(n):
+        for j in range(i+1,n): 
+            if (basis[i],basis[j]) in struct_coeffs.keys():
+                pr = struct_coeffs[(basis[i], basis[j])]
+                f[i+1,j+1] = sum([ pr.coefficient(z)*P(z) for z in basis])
+    return f, M
+    
+
+def factors_of_diff_form(M,f):
+    n = M.dim()
+    index_sets = [tuple(c) for c in combinations(range(1, n + 1), n - 1)]
+    P = l.polynomialRing
+    F = P.fraction_field()
+
+    mat = zero_matrix(F, n, n)
+    for i in range(n):
+        ei = zero_vector(n); ei[i] = 1
+        di = M.one_form(ei)
+        fw = f.wedge(di)
+        mat[i,:] = [[fw[ind] for ind in index_sets]]
+
+    return mat
+
+
+
 def is_gradient(vec):
     
     P = vec[0].parent()
@@ -126,5 +164,3 @@ def make_it_gradient(vec, gradients):
     assert is_gradient(vec)  
 
     return vec
-
-
