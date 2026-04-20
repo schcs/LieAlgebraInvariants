@@ -3,8 +3,6 @@ from auxfunctions import _polynomial_ring
 
 
 def omega_form(l):
-    pass
-
     n = l.dimension()
     P = _polynomial_ring(l)
     M = EuclideanSpace(n)
@@ -16,10 +14,12 @@ def omega_form(l):
             if (basis[i],basis[j]) in struct_coeffs.keys():
                 pr = struct_coeffs[(basis[i], basis[j])]
                 f[i+1,j+1] = sum([ pr.coefficient(z)*P(z) for z in basis])
-    return f, M
+    return f
     
 
-def factors_of_diff_form(M,f):
+def factors_of_diff_form(f):
+
+    M = f.domain()
     n = M.dim()
     index_sets = [tuple(c) for c in combinations(range(1, n + 1), n - 1)]
     P = l.polynomialRing
@@ -37,6 +37,25 @@ def factors_of_diff_form(M,f):
     return ker
 
 
+def gradient(f):
+    """Compute the gradient vector of a polynomial.
+    
+    Parameters
+    ----------
+    f : element
+        A polynomial in a Sage polynomial ring.
+    
+    Returns
+    -------
+    list
+        The gradient vector [∂f/∂x_0, …, ∂f/∂x_{n-1}]
+    """
+    P = f.parent()
+    DP = P.derivation_module()
+    ders = DP.gens()
+    
+    return [d(f) for d in ders]
+
 
 def is_gradient(vec):
     
@@ -49,7 +68,7 @@ def is_gradient(vec):
             if DP.gens()[i](vec[j]) != DP.gens()[j](vec[i]):
                 return False, i, j
 
-    return True
+    return True, -1, -1
 
 
 def polynomial_from_gradient(grad, gens=None, constant=None, check=True):
@@ -166,3 +185,4 @@ def make_it_gradient(vec, gradients, check=True):
         assert is_gradient(vec)[0]
 
     return vec
+
