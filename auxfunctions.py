@@ -34,6 +34,11 @@ def _triangular_basis_nilpotent_lie_algebra(lie_alg):
     return bas
 
 
+def _basis_variables(lie_alg, var_str = 'x'):
+    bas = list(lie_alg.basis())
+    dim = lie_alg.dimension()
+    return {var_str + str(k): bas[k] for k in range(dim)}
+
 def _polynomial_ring(lie_alg):
     """
     Return the polynomial ring of a Lie algebra.
@@ -57,9 +62,11 @@ def _polynomial_ring(lie_alg):
     """
     if not hasattr(lie_alg, "polynomialRing"):    
         FF = lie_alg.base_ring()
+        bas_vars = _basis_variables(lie_alg)
         lie_alg.polynomialRing = PolynomialRing(FF, lie_alg.dimension(),
-                                                list(lie_alg.basis()),
+                                                list(bas_vars.keys()),
                                                 order="invlex")
         lie_alg.fractionField = lie_alg.polynomialRing.fraction_field()
+        lie_alg.poly_vars_dict = bas_vars
 
     return lie_alg.polynomialRing

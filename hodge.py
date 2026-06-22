@@ -7,13 +7,28 @@ def omega_form(l):
     P = _polynomial_ring(l)
     M = EuclideanSpace(n)
     f = M.diff_form(2)
-    basis = list(l.basis().keys())
+    poly_vars_dict = l.poly_vars_dict
+    poly_vars = list(poly_vars_dict)
+    basis_elems = [poly_vars_dict[name] for name in poly_vars]
+    Pgens = P.gens_dict()
     struct_coeffs = l.structure_coefficients()
     for i in range(n):
         for j in range(i+1,n): 
-            if (basis[i],basis[j]) in struct_coeffs.keys():
-                pr = struct_coeffs[(basis[i], basis[j])]
-                f[i+1,j+1] = sum([ pr.coefficient(z)*P(z) for z in basis])
+            ei = basis_elems[i]
+            ej = basis_elems[j]
+
+            try:
+                pr = struct_coeffs[(ei, ej)]
+            except (KeyError, TypeError):
+                try:
+                    pr = -struct_coeffs[(ej, ei)]
+                except (KeyError, TypeError):
+                    continue
+
+            f[i + 1, j + 1] = sum(
+                (pr.coefficient(be) * Pgens[name] for name, be in zip(poly_vars, basis_elems)),
+                P(0),
+            )
     return f
     
 
